@@ -1,0 +1,1288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>🏀 Bracket Brawl 2026</title>
+<style>
+  /* ---------- Base ---------- */
+  :root {
+    --bg-1: #ff6a3d;
+    --bg-2: #ff2e63;
+    --bg-3: #6a4cff;
+    --bg-4: #00d4ff;
+    --ink: #1a1033;
+    --paper: #fffaf2;
+    --card: #ffffff;
+    --muted: #6b6480;
+    --gold: #ffd23f;
+    --silver: #c0c5cc;
+    --bronze: #cd7f32;
+    --good: #21d07a;
+    --bad: #ff4d6d;
+    --shadow: 0 10px 30px rgba(26, 16, 51, .15);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background:
+      radial-gradient(1200px 600px at 10% -10%, rgba(255,106,61,.35), transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, rgba(106,76,255,.35), transparent 60%),
+      linear-gradient(180deg, #fff5ec 0%, #fff 60%);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 24px; }
+
+  /* ---------- Header ---------- */
+  header.hero {
+    background: linear-gradient(135deg, var(--bg-1), var(--bg-2) 40%, var(--bg-3) 80%, var(--bg-4));
+    color: white;
+    border-radius: 28px;
+    padding: 28px 28px 24px;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+  }
+  header.hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(600px 200px at 80% 0%, rgba(255,255,255,.25), transparent 60%);
+    pointer-events: none;
+  }
+  .hero-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .hero h1 {
+    margin: 0;
+    font-size: clamp(28px, 4vw, 44px);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .hero h1 .emoji { filter: drop-shadow(0 2px 0 rgba(0,0,0,.15)); }
+  .hero p.tag { margin: 8px 0 0; opacity: .9; font-weight: 500; }
+  .hero .links { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,.18);
+    border: 1px solid rgba(255,255,255,.35);
+    color: white; text-decoration: none;
+    padding: 8px 12px; border-radius: 999px; font-size: 13px; font-weight: 600;
+    backdrop-filter: blur(6px);
+  }
+  .pill:hover { background: rgba(255,255,255,.3); }
+
+  /* ---------- Sections ---------- */
+  section { margin-top: 28px; }
+  h2.section {
+    margin: 0 0 12px;
+    font-size: 22px; letter-spacing: -.01em; font-weight: 800;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2.section .badge {
+    font-size: 12px; font-weight: 700; padding: 4px 8px; border-radius: 999px;
+    background: var(--ink); color: white;
+  }
+
+  /* ---------- Live scores ---------- */
+  .scores-strip {
+    display: flex; gap: 12px; overflow-x: auto;
+    padding: 4px 2px 14px; scroll-snap-type: x mandatory;
+  }
+  .game-card {
+    flex: 0 0 auto; min-width: 240px;
+    background: var(--card); border-radius: 16px; padding: 12px 14px;
+    box-shadow: var(--shadow); scroll-snap-align: start;
+    border-left: 6px solid var(--bg-3);
+  }
+  .game-card .meta { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-weight: 700; }
+  .game-card .row { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
+  .game-card .team { display: flex; align-items: center; gap: 8px; font-weight: 700; }
+  .game-card .team .dot { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
+  .game-card .score { font-variant-numeric: tabular-nums; font-weight: 800; font-size: 18px; }
+  .game-card.live { border-left-color: var(--bad); }
+  .game-card.final { border-left-color: var(--muted); }
+  .game-card .status { font-size: 11px; padding: 3px 8px; border-radius: 999px; background: #f1eef8; color: var(--ink); display: inline-block; margin-top: 6px; font-weight: 700; }
+  .game-card.live .status { background: #ffe2e8; color: #b80037; animation: pulse 1.6s infinite; }
+  @keyframes pulse { 0%,100%{ opacity: 1 } 50%{ opacity: .6 } }
+
+  /* ---------- Leaderboard ---------- */
+  .grid-2 { display: grid; grid-template-columns: 1.1fr .9fr; gap: 24px; }
+  @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--card); border-radius: 20px; box-shadow: var(--shadow);
+    padding: 18px 18px 8px;
+  }
+  table.lb { width: 100%; border-collapse: collapse; }
+  table.lb th, table.lb td { padding: 10px 6px; text-align: left; }
+  table.lb th { font-size: 11px; text-transform: uppercase; color: var(--muted); letter-spacing: .08em; border-bottom: 1px solid #eee; }
+  table.lb td { border-bottom: 1px dashed #eee; font-size: 14px; }
+  table.lb tr:last-child td { border-bottom: none; }
+  table.lb td.rank { font-weight: 800; font-size: 18px; width: 44px; }
+  table.lb td.user { font-weight: 700; }
+  table.lb td.pts { font-variant-numeric: tabular-nums; font-weight: 700; }
+  table.lb td.delta { font-size: 12px; color: var(--muted); }
+  .medal-1 { color: var(--gold); }
+  .medal-2 { color: var(--silver); }
+  .medal-3 { color: var(--bronze); }
+
+  /* ---------- Probability ---------- */
+  .prob-row { display: grid; grid-template-columns: 130px 1fr 60px; align-items: center; gap: 10px; padding: 8px 0; }
+  .prob-row .name { font-weight: 700; font-size: 14px; }
+  .prob-row .bar { height: 14px; background: #f0eef7; border-radius: 999px; overflow: hidden; position: relative; }
+  .prob-row .fill {
+    height: 100%; border-radius: 999px;
+    background: linear-gradient(90deg, var(--bg-3), var(--bg-2));
+    transition: width .6s cubic-bezier(.2,.8,.2,1);
+  }
+  .prob-row .pct { font-variant-numeric: tabular-nums; font-weight: 800; text-align: right; font-size: 14px; }
+
+  /* ---------- Brackets ---------- */
+  .user-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; }
+  .user-tab {
+    flex: 0 0 auto;
+    background: white; border: 1px solid #e7e3f1; padding: 8px 14px;
+    border-radius: 999px; cursor: pointer; font-weight: 700; font-size: 13px;
+    color: var(--ink);
+  }
+  .user-tab.active {
+    background: var(--ink); color: white; border-color: var(--ink);
+  }
+
+  .bracket {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+  .bracket.bracket-6col { grid-template-columns: repeat(6, 1fr); }
+  .col-label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 700; }
+  .col { display: flex; flex-direction: column; gap: 8px; }
+  .col.r1 { gap: 8px; }
+  .col.r2 { padding-top: 32px; gap: 64px; }
+  .col.cf { padding-top: 96px; gap: 192px; }
+  .col.f  { padding-top: 224px; gap: 0; }
+  @media (max-width: 900px) {
+    .bracket, .bracket.bracket-6col { grid-template-columns: 1fr; }
+    .col.r2, .col.cf, .col.f { padding-top: 0; gap: 8px; }
+  }
+
+  /* ---------- Champion card (NBA Finals pick, featured at top) ---------- */
+  .champion-card {
+    position: relative; border-radius: 18px; padding: 18px 22px;
+    color: white; box-shadow: 0 10px 24px rgba(0,0,0,.18);
+    margin-bottom: 18px; overflow: hidden;
+  }
+  .champion-card.wrong { opacity: .75; }
+  .champion-card.wrong .champion-text { text-decoration: line-through; text-decoration-thickness: 2px; }
+  .champion-card.correct { box-shadow: 0 0 0 3px #10b981, 0 10px 24px rgba(16,185,129,.35); }
+  .champion-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: .12em;
+    font-weight: 800; opacity: .85; margin-bottom: 8px;
+    text-shadow: 0 1px 2px rgba(0,0,0,.4);
+  }
+  .champion-body { display: flex; align-items: center; gap: 16px; }
+  .champion-logo {
+    width: 72px; height: 72px; object-fit: contain; flex: 0 0 72px;
+    background: rgba(255,255,255,.92); border-radius: 12px; padding: 6px;
+  }
+  .champion-text { flex: 1 1 auto; text-shadow: 0 1px 2px rgba(0,0,0,.4); }
+  .champion-team { font-size: 24px; font-weight: 900; letter-spacing: -.02em; }
+  .champion-name { font-weight: 600; opacity: .9; font-size: 18px; }
+  .champion-status { font-size: 13px; font-weight: 600; opacity: .9; margin-top: 2px; }
+  .pick {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px; border-radius: 12px; background: #f7f5fb;
+    border-left: 5px solid var(--bg-3); font-weight: 700; font-size: 13px;
+  }
+  .pick .team-logo {
+    width: 28px; height: 28px; object-fit: contain; flex: 0 0 28px;
+  }
+  .pick .pick-body { flex: 1 1 auto; min-width: 0; }
+  .pick .pick-pts { font-size: 11px; color: var(--muted); font-weight: 700; flex: 0 0 auto; }
+  .pick.correct { background: #defde6; border-left-color: var(--good); }
+  /* Only strike through the text content, not the logo */
+  .pick.wrong   { background: #ffe1e6; border-left-color: var(--bad); opacity: .85; }
+  .pick.wrong .pick-body, .pick.wrong .pick-pts { text-decoration: line-through; }
+  .pick.pending { background: #fff7e0; border-left-color: var(--gold); }
+  .pick .games { font-size: 11px; font-weight: 600; color: var(--muted); }
+
+  /* ---------- Footer / data tools ---------- */
+  details.tools {
+    margin-top: 24px; background: white; border-radius: 16px; padding: 14px 18px; box-shadow: var(--shadow);
+  }
+  details.tools summary { cursor: pointer; font-weight: 800; }
+  details.tools textarea {
+    width: 100%; min-height: 240px; font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 12px; padding: 12px; border-radius: 12px; border: 1px solid #e7e3f1; margin-top: 10px;
+  }
+  details.tools .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  button.btn {
+    background: var(--ink); color: white; border: none; padding: 10px 14px;
+    border-radius: 12px; font-weight: 700; cursor: pointer;
+  }
+  button.btn.ghost { background: transparent; color: var(--ink); border: 1px solid #e7e3f1; }
+  .toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: white; padding: 12px 18px; border-radius: 12px;
+    font-weight: 700; font-size: 13px; opacity: 0; transition: opacity .3s;
+    pointer-events: none; z-index: 50;
+  }
+  .toast.show { opacity: 1; }
+  footer { margin: 32px 0 12px; text-align: center; color: var(--muted); font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="hero-row">
+      <div>
+        <h1><span class="emoji">🏀</span> Bracket Brawl <span class="emoji">🔥</span></h1>
+        <p class="tag" id="group-tag">Loading group…</p>
+      </div>
+      <div class="links">
+        <a class="pill" id="espn-link" href="#" target="_blank" rel="noopener">View on ESPN ↗</a>
+        <a class="pill" href="#tools">Edit data ⚙︎</a>
+        <span class="pill" id="sync-indicator" title="Auto-syncs from ESPN every 5 minutes">🔄 Syncing…</span>
+        <span class="pill" id="last-updated">Updated —</span>
+      </div>
+    </div>
+  </header>
+
+  <section>
+    <h2 class="section">📺 Today on the hardwood <span class="badge" id="games-count">0</span></h2>
+    <div id="scores" class="scores-strip">
+      <div class="game-card"><div class="meta">Loading…</div></div>
+    </div>
+  </section>
+
+  <section class="grid-2">
+    <div class="card">
+      <h2 class="section">🏆 Leaderboard</h2>
+      <table class="lb">
+        <thead>
+          <tr>
+            <th>#</th><th>Player</th><th>Points</th><th>Possible</th><th>Correct</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard"></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h2 class="section">🎲 Win probability</h2>
+      <div id="prob"></div>
+      <p style="font-size:12px;color:var(--muted);margin:8px 4px 12px">
+        Monte Carlo over <span id="sim-n">10,000</span> simulations of the remaining games.
+        Series favorites are inferred from seeding (see "Edit data" to tune).
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="section">🗺️ Picks vs. reality</h2>
+    <div class="user-tabs" id="user-tabs"></div>
+    <div class="card" style="margin-top:10px;">
+      <div id="bracket-host"></div>
+    </div>
+  </section>
+
+  <details class="tools" id="tools">
+    <summary>⚙︎ Edit data (picks, series state, scoring)</summary>
+    <p style="font-size:13px;color:var(--muted);margin:8px 0 0">
+      Edit the JSON below to update picks, mark series winners, or change scoring weights.
+      Click <b>Save & redraw</b> to apply. Data is stored locally so it persists for you;
+      to share the latest, copy this JSON into the file's <code>DEFAULT_DATA</code> block.
+    </p>
+    <textarea id="data-json" spellcheck="false"></textarea>
+    <div class="row">
+      <button class="btn" id="save-btn">Save & redraw</button>
+      <button class="btn ghost" id="reset-btn">Reset to default</button>
+      <button class="btn ghost" id="export-btn">Copy JSON</button>
+    </div>
+
+    <hr style="margin:18px 0;border:none;border-top:1px dashed rgba(0,0,0,.15)" />
+
+    <p style="font-size:13px;color:var(--muted);margin:0 0 6px">
+      <b>ESPN auto-fetch</b> — pulls your group's picks from
+      <code>gambit-api.fantasy.espn.com</code> (runs in your browser using your ESPN login cookie).
+      The raw payload appears in the <b>Fetch output</b> box below so it can't accidentally clobber your DATA.
+    </p>
+    <div class="row">
+      <button class="btn ghost" id="fetch-btn">Try ESPN auto-fetch</button>
+      <button class="btn ghost" id="fetch-copy-btn">Copy fetch output</button>
+      <button class="btn ghost" id="fetch-clear-btn">Clear fetch output</button>
+    </div>
+    <textarea id="fetch-output" spellcheck="false" readonly
+      style="margin-top:10px;background:#fafafa;color:#333;min-height:120px"
+      placeholder="ESPN fetch results will appear here (read-only). Copy + paste them to Claude to auto-map picks."></textarea>
+    <p style="font-size:12px;color:var(--muted);margin-top:8px">
+      ESPN sometimes blocks cross-origin access for this endpoint, so falling back to manual edit is normal.
+    </p>
+  </details>
+
+  <footer>
+    Made with 🍕 for Harrison's group. Live scores via ESPN public scoreboard.
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================================
+   1. STATIC LOOKUP TABLES — team colors, names, etc.
+   ========================================================================= */
+const TEAMS = {
+  // West
+  OKC: { name: "Thunder",      city: "OKC",         color: "#007AC1", color2: "#EF3B24" },
+  DEN: { name: "Nuggets",      city: "Denver",      color: "#0E2240", color2: "#FEC524" },
+  MIN: { name: "Timberwolves", city: "Minnesota",   color: "#0C2340", color2: "#78BE20" },
+  LAC: { name: "Clippers",     city: "LA Clippers", color: "#1D428A", color2: "#C8102E" },
+  LAL: { name: "Lakers",       city: "LA Lakers",   color: "#552583", color2: "#FDB927" },
+  DAL: { name: "Mavericks",    city: "Dallas",      color: "#00538C", color2: "#B8C4CA" },
+  HOU: { name: "Rockets",      city: "Houston",     color: "#CE1141", color2: "#000000" },
+  GSW: { name: "Warriors",     city: "Golden State",color: "#1D428A", color2: "#FFC72C" },
+  PHX: { name: "Suns",         city: "Phoenix",     color: "#1D1160", color2: "#E56020" },
+  MEM: { name: "Grizzlies",    city: "Memphis",     color: "#5D76A9", color2: "#12173F" },
+  SAC: { name: "Kings",        city: "Sacramento",  color: "#5A2D81", color2: "#63727A" },
+  NOP: { name: "Pelicans",     city: "New Orleans", color: "#0C2340", color2: "#C8102E" },
+  POR: { name: "Trail Blazers",city: "Portland",    color: "#E03A3E", color2: "#000000" },
+  UTA: { name: "Jazz",         city: "Utah",        color: "#002B5C", color2: "#F9A01B" },
+  SAS: { name: "Spurs",        city: "San Antonio", color: "#C4CED4", color2: "#000000" },
+  // East
+  BOS: { name: "Celtics",      city: "Boston",      color: "#007A33", color2: "#BA9653" },
+  MIL: { name: "Bucks",        city: "Milwaukee",   color: "#00471B", color2: "#EEE1C6" },
+  NYK: { name: "Knicks",       city: "New York",    color: "#006BB6", color2: "#F58426" },
+  PHI: { name: "76ers",        city: "Philly",      color: "#006BB6", color2: "#ED174C" },
+  CLE: { name: "Cavaliers",    city: "Cleveland",   color: "#860038", color2: "#FDBB30" },
+  IND: { name: "Pacers",       city: "Indiana",     color: "#002D62", color2: "#FDBB30" },
+  MIA: { name: "Heat",         city: "Miami",       color: "#98002E", color2: "#F9A01B" },
+  ORL: { name: "Magic",        city: "Orlando",     color: "#0077C0", color2: "#C4CED4" },
+  ATL: { name: "Hawks",        city: "Atlanta",     color: "#E03A3E", color2: "#C1D32F" },
+  CHI: { name: "Bulls",        city: "Chicago",     color: "#CE1141", color2: "#000000" },
+  TOR: { name: "Raptors",      city: "Toronto",     color: "#CE1141", color2: "#000000" },
+  BKN: { name: "Nets",         city: "Brooklyn",    color: "#000000", color2: "#FFFFFF" },
+  WAS: { name: "Wizards",      city: "Washington",  color: "#002B5C", color2: "#E31837" },
+  CHA: { name: "Hornets",      city: "Charlotte",   color: "#1D1160", color2: "#00788C" },
+  DET: { name: "Pistons",      city: "Detroit",     color: "#C8102E", color2: "#1D42BA" },
+};
+
+function teamColor(abbr) { return (TEAMS[abbr] && TEAMS[abbr].color) || "#6a4cff"; }
+function teamName(abbr)  { return (TEAMS[abbr] && TEAMS[abbr].name)  || abbr; }
+// ESPN CDN logo URL — covers all 30 NBA teams. A few clubs use 2-letter codes on ESPN.
+const ESPN_LOGO_CODE = {
+  OKC:"okc", DEN:"den", MIN:"min", LAC:"lac", LAL:"lal", DAL:"dal", HOU:"hou",
+  GSW:"gs",  PHX:"phx", MEM:"mem", SAC:"sac", NOP:"no",  POR:"por", UTA:"utah", SAS:"sa",
+  BOS:"bos", MIL:"mil", NYK:"ny",  PHI:"phi", CLE:"cle", IND:"ind", MIA:"mia",
+  ORL:"orl", ATL:"atl", CHI:"chi", TOR:"tor", BKN:"bkn", WAS:"wsh", CHA:"cha", DET:"det"
+};
+function teamLogo(abbr) {
+  const code = ESPN_LOGO_CODE[abbr];
+  return code ? `https://a.espncdn.com/i/teamlogos/nba/500/${code}.png` : "";
+}
+
+/* =========================================================================
+   2. DEFAULT DATA — edit this block (or the on-page JSON editor) to update
+      picks, scoring, and series state. The series IDs follow the pattern:
+        WR1-1..WR1-4   East/West Round 1
+        ER1-1..ER1-4
+        WR2-1..WR2-2   Conf semis
+        ER2-1..ER2-2
+        WCF, ECF       Conf Finals
+        FIN            NBA Finals
+   ========================================================================= */
+const DEFAULT_DATA = {
+  groupId: "fc14ec4b-395d-431d-adb2-b2de2f30a47d",
+  challenge: "nba-playoff-challenge-2026",
+  groupName: "LakeShow 2027 Champions",
+  scoring: {
+    // Points per correct series winner, by round
+    R1: 40, R2: 80, CF: 160, FIN: 320,
+    // Bonus for guessing correct number of games
+    GAMES_BONUS: 10,
+  },
+  // Set 'winner' once a series ends. status: "upcoming" | "live" | "complete".
+  // gamesA / gamesB is the current series score (wins for team A / B).
+  // For best-on-screen layout, keep the order: WR1-1 .. WR1-4, ER1-1 .. ER1-4, WR2-1..WR2-2, ER2-1..ER2-2, WCF, ECF, FIN
+  series: [
+    // ---- WEST ROUND 1 (top to bottom) — 2026 ESPN bracket ----
+    { id: "WR1-1", round: "R1", conf: "W", seedA: 1, teamA: "OKC", seedB: 8, teamB: "PHX", gamesA: 0, gamesB: 0, status: "upcoming", winner: null },
+    { id: "WR1-2", round: "R1", conf: "W", seedA: 4, teamA: "LAL", seedB: 5, teamB: "HOU", gamesA: 0, gamesB: 0, status: "upcoming", winner: null },
+    { id: "WR1-3", round: "R1", conf: "W", seedA: 3, teamA: "DEN", seedB: 6, teamB: "MIN", gamesA: 0, gamesB: 0, status: "upcoming", winner: null },
+    { id: "WR1-4", round: "R1", conf: "W", seedA: 2, teamA: "SAS", seedB: 7, teamB: "POR", gamesA: 0, gamesB: 0, status: "upcoming", winner: null },
+    // ---- EAST ROUND 1 — 2026 ESPN bracket ----
+    { id: "ER1-1", round: "R1", conf: "E", seedA: 1, teamA: "DET", seedB: 8, teamB: "ORL", gamesA: 0, gamesB: 0, status: "upcoming", winner: null },
+    { id: "ER1-2", round: "R1", conf: "E", seedA: 4, teamA: "CLE", seedB: 5, teamB: "TOR", gamesA: 0, gamesB: 0, status: "upcoming", winner: null },
+    { id: "ER1-3", round: "R1", conf: "E", seedA: 3, teamA: "NYK", seedB: 6, teamB: "ATL", gamesA: 0, gamesB: 0, status: "upcoming", winner: null },
+    { id: "ER1-4", round: "R1", conf: "E", seedA: 2, teamA: "BOS", seedB: 7, teamB: "PHI", gamesA: 0, gamesB: 0, status: "upcoming", winner: null },
+    // ---- CONF SEMIS (West, then East) — teams set after R1 ----
+    { id: "WR2-1", round: "R2", conf: "W", feeders: ["WR1-1","WR1-2"], gamesA: 0, gamesB: 0, status: "upcoming", winner: null },
+    { id: "WR2-2", round: "R2", conf: "W", feeders: ["WR1-3","WR1-4"], gamesA: 0, gamesB: 0, status: "upcoming", winner: null },
+    { id: "ER2-1", round: "R2", conf: "E", feeders: ["ER1-1","ER1-2"], gamesA: 0, gamesB: 0, status: "upcoming", winner: null },
+    { id: "ER2-2", round: "R2", conf: "E", feeders: ["ER1-3","ER1-4"], gamesA: 0, gamesB: 0, status: "upcoming", winner: null },
+    // ---- CONF FINALS ----
+    { id: "WCF",   round: "CF", conf: "W", feeders: ["WR2-1","WR2-2"], gamesA: 0, gamesB: 0, status: "upcoming", winner: null },
+    { id: "ECF",   round: "CF", conf: "E", feeders: ["ER2-1","ER2-2"], gamesA: 0, gamesB: 0, status: "upcoming", winner: null },
+    // ---- FINALS ----
+    { id: "FIN",   round: "FIN", conf: "L", feeders: ["WCF","ECF"],    gamesA: 0, gamesB: 0, status: "upcoming", winner: null },
+  ],
+  // Each user provides a winner for every series ID and an optional games guess.
+  // 'tiebreaker' is total points of the championship game (used only for ties).
+  users: [
+    { name: "dwong37", teamName: "dwong37's Picks 1", picks: {
+      "WR1-1":"OKC","WR1-2":"HOU","WR1-3":"DEN","WR1-4":"SAS",
+      "ER1-1":"DET","ER1-2":"CLE","ER1-3":"NYK","ER1-4":"BOS",
+      "WR2-1":"OKC","WR2-2":"SAS","ER2-1":"DET","ER2-2":"BOS",
+      "WCF":"SAS","ECF":"DET","FIN":"SAS"
+    }, games: {}, tiebreaker: 550 },
+    { name: "KAI33", teamName: "KAI33's Picks 1", picks: {
+      "WR1-1":"OKC","WR1-2":"LAL","WR1-3":"DEN","WR1-4":"SAS",
+      "ER1-1":"DET","ER1-2":"CLE","ER1-3":"NYK","ER1-4":"BOS",
+      "WR2-1":"OKC","WR2-2":"SAS","ER2-1":"DET","ER2-2":"BOS",
+      "WCF":"OKC","ECF":"BOS","FIN":"OKC"
+    }, games: {}, tiebreaker: 700 },
+    { name: "msistare1", teamName: "msistare1's Picks 1", picks: {
+      "WR1-1":"OKC","WR1-2":"HOU","WR1-3":"DEN","WR1-4":"SAS",
+      "ER1-1":"DET","ER1-2":"CLE","ER1-3":"NYK","ER1-4":"BOS",
+      "WR2-1":"OKC","WR2-2":"DEN","ER2-1":"DET","ER2-2":"BOS",
+      "WCF":"OKC","ECF":"BOS","FIN":"BOS"
+    }, games: {}, tiebreaker: 690 },
+    { name: "aod1365", teamName: "aod1365's Picks 1", picks: {
+      "WR1-1":"OKC","WR1-2":"HOU","WR1-3":"DEN","WR1-4":"SAS",
+      "ER1-1":"DET","ER1-2":"CLE","ER1-3":"NYK","ER1-4":"BOS",
+      "WR2-1":"OKC","WR2-2":"SAS","ER2-1":"DET","ER2-2":"BOS",
+      "WCF":"OKC","ECF":"BOS","FIN":"BOS"
+    }, games: {}, tiebreaker: 530 },
+    { name: "LeThragg James", teamName: "LeThragg James (espn63096117)", picks: {
+      "WR1-1":"OKC","WR1-2":"HOU","WR1-3":"DEN","WR1-4":"SAS",
+      "ER1-1":"DET","ER1-2":"CLE","ER1-3":"NYK","ER1-4":"BOS",
+      "WR2-1":"OKC","WR2-2":"SAS","ER2-1":"CLE","ER2-2":"BOS",
+      "WCF":"OKC","ECF":"BOS","FIN":"OKC"
+    }, games: {}, tiebreaker: 530 },
+    { name: "HoosierHappa21", teamName: "HoosierHappa21's Picks 1", picks: {
+      "WR1-1":"OKC","WR1-2":"HOU","WR1-3":"DEN","WR1-4":"SAS",
+      "ER1-1":"DET","ER1-2":"CLE","ER1-3":"NYK","ER1-4":"BOS",
+      "WR2-1":"OKC","WR2-2":"SAS","ER2-1":"CLE","ER2-2":"BOS",
+      "WCF":"SAS","ECF":"CLE","FIN":"SAS"
+    }, games: {}, tiebreaker: 500 },
+    { name: "ZESTY BOI BRACKET", teamName: "ZESTY BOI BRACKET (H - Ju)", picks: {
+      "WR1-1":"OKC","WR1-2":"HOU","WR1-3":"DEN","WR1-4":"SAS",
+      "ER1-1":"DET","ER1-2":"CLE","ER1-3":"NYK","ER1-4":"BOS",
+      "WR2-1":"OKC","WR2-2":"DEN","ER2-1":"DET","ER2-2":"BOS",
+      "WCF":"OKC","ECF":"BOS","FIN":"OKC"
+    }, games: {}, tiebreaker: 162 },
+    { name: "ivy_27", teamName: "ivy_27's Picks 1", picks: {
+      "WR1-1":"OKC","WR1-2":"LAL","WR1-3":"DEN","WR1-4":"SAS",
+      "ER1-1":"DET","ER1-2":"CLE","ER1-3":"NYK","ER1-4":"BOS",
+      "WR2-1":"OKC","WR2-2":"SAS","ER2-1":"DET","ER2-2":"BOS",
+      "WCF":"SAS","ECF":"BOS","FIN":"SAS"
+    }, games: {}, tiebreaker: 672 },
+    { name: "Ryan29143", teamName: "Ryan29143's Picks 1", picks: {
+      "WR1-1":"OKC","WR1-2":"HOU","WR1-3":"DEN","WR1-4":"SAS",
+      "ER1-1":"DET","ER1-2":"CLE","ER1-3":"ATL","ER1-4":"BOS",
+      "WR2-1":"OKC","WR2-2":"DEN","ER2-1":"CLE","ER2-2":"BOS",
+      "WCF":"DEN","ECF":"BOS","FIN":"DEN"
+    }, games: {}, tiebreaker: 685 },
+    { name: "Chadd Cosse", teamName: "Chadd Cosse's Picks 1", picks: {
+      "WR1-1":"OKC","WR1-2":"HOU","WR1-3":"DEN","WR1-4":"SAS",
+      "ER1-1":"DET","ER1-2":"CLE","ER1-3":"ATL","ER1-4":"BOS",
+      "WR2-1":"OKC","WR2-2":"DEN","ER2-1":"DET","ER2-2":"BOS",
+      "WCF":"DEN","ECF":"DET","FIN":"DET"
+    }, games: {}, tiebreaker: 220 },
+  ],
+};
+
+/* =========================================================================
+   3. STORAGE & STATE
+   ========================================================================= */
+let DATA = null;
+let activeUserIdx = 0;
+
+function isValidData(d) {
+  return d && Array.isArray(d.users) && Array.isArray(d.series) && d.scoring && typeof d.groupId === "string";
+}
+function loadData() {
+  try {
+    const raw = window.localStorage && localStorage.getItem("bracketBrawlData");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (isValidData(parsed)) return parsed;
+      // corrupt — auto-heal
+      console.warn("Stored data was invalid; resetting to default.");
+      try { localStorage.removeItem("bracketBrawlData"); } catch(e) {}
+    }
+  } catch (e) {
+    try { localStorage.removeItem("bracketBrawlData"); } catch(_) {}
+  }
+  return JSON.parse(JSON.stringify(DEFAULT_DATA));
+}
+function saveData() {
+  try { localStorage.setItem("bracketBrawlData", JSON.stringify(DATA)); } catch(e) {}
+}
+
+/* =========================================================================
+   4. SERIES HELPERS — derive teams for later rounds based on R1 winners
+   ========================================================================= */
+function seriesById(id)  { return DATA.series.find(s => s.id === id); }
+function effectiveTeamA(s) {
+  if (s.teamA) return s.teamA;
+  if (s.feeders) {
+    const f = seriesById(s.feeders[0]);
+    return f && f.winner ? f.winner : null;
+  }
+  return null;
+}
+function effectiveTeamB(s) {
+  if (s.teamB) return s.teamB;
+  if (s.feeders) {
+    const f = seriesById(s.feeders[1]);
+    return f && f.winner ? f.winner : null;
+  }
+  return null;
+}
+// Effective seeds for upper rounds: take seed from the feeding R1 series winner
+function effectiveSeedA(s) {
+  if (s.seedA != null) return s.seedA;
+  if (s.feeders) {
+    const f = seriesById(s.feeders[0]);
+    if (f && f.winner) return (f.winner === f.teamA ? f.seedA : f.seedB);
+  }
+  return null;
+}
+function effectiveSeedB(s) {
+  if (s.seedB != null) return s.seedB;
+  if (s.feeders) {
+    const f = seriesById(s.feeders[1]);
+    if (f && f.winner) return (f.winner === f.teamA ? f.seedA : f.seedB);
+  }
+  return null;
+}
+
+/* =========================================================================
+   5. SCORING
+   ========================================================================= */
+function scorePoints(series, pickedWinner, pickedGames) {
+  if (!series.winner) return { earned: 0, possible: roundValue(series) };
+  let earned = 0;
+  if (pickedWinner === series.winner) {
+    earned += roundValue(series);
+    const totalGames = (series.gamesA || 0) + (series.gamesB || 0);
+    if (pickedGames && pickedGames === totalGames) earned += DATA.scoring.GAMES_BONUS;
+  }
+  return { earned, possible: 0 };
+}
+function roundValue(series) {
+  return DATA.scoring[series.round] || 0;
+}
+function userScore(user, sims) {
+  let earned = 0, possible = 0, correct = 0;
+  for (const s of DATA.series) {
+    const pick = user.picks[s.id];
+    const games = user.games && user.games[s.id];
+    const r = scorePoints(s, pick, games);
+    earned += r.earned;
+    possible += r.possible;
+    if (s.winner && pick === s.winner) correct += 1;
+  }
+  return { earned, possible, correct };
+}
+
+/* =========================================================================
+   6. MONTE CARLO — series win probability based on seeds
+   ========================================================================= */
+// Lower seed difference → closer to 50/50; bigger gap → bigger edge for higher seed.
+// Calibrated loosely against historical NBA playoff series win rates.
+const SEED_WIN_RATES = {
+  "1v8": 0.93, "2v7": 0.84, "3v6": 0.69, "4v5": 0.55,
+  "1v4": 0.66, "1v5": 0.66, "2v3": 0.55, "2v6": 0.74,
+  "1v2": 0.55, "1v3": 0.62, "default": 0.55,
+};
+function pSeedWin(higherSeed, lowerSeed) {
+  if (higherSeed == null || lowerSeed == null) return 0.5;
+  const [hi, lo] = higherSeed < lowerSeed ? [higherSeed, lowerSeed] : [lowerSeed, higherSeed];
+  const key = hi + "v" + lo;
+  return SEED_WIN_RATES[key] != null ? SEED_WIN_RATES[key] : SEED_WIN_RATES.default;
+}
+// Probability that team A wins this series (given current series score)
+function pSeriesAWin(series) {
+  if (series.winner) return series.winner === effectiveTeamA(series) ? 1 : 0;
+  const sA = effectiveSeedA(series), sB = effectiveSeedB(series);
+  // Per-game probability of A winning (independent games approximation)
+  let pGameA;
+  if (sA != null && sB != null) {
+    const aIsHigher = sA < sB;
+    const seriesP = pSeedWin(sA, sB);
+    pGameA = aIsHigher ? invertSeriesToGameP(seriesP) : 1 - invertSeriesToGameP(seriesP);
+  } else {
+    pGameA = 0.5;
+  }
+  // Compute probability A reaches 4 wins before B, given current score
+  return probReachFirst(4 - (series.gamesA || 0), 4 - (series.gamesB || 0), pGameA);
+}
+// Convert a "best of 7 series win prob" to a per-game prob using a simple inverse.
+// We approximate by a binary search.
+function invertSeriesToGameP(targetSeriesP) {
+  let lo = 0.01, hi = 0.99;
+  for (let i = 0; i < 30; i++) {
+    const mid = (lo + hi) / 2;
+    const p = probReachFirst(4, 4, mid);
+    if (p < targetSeriesP) lo = mid; else hi = mid;
+  }
+  return (lo + hi) / 2;
+}
+// Probability that team needing winsA games wins before team needing winsB games (memoized)
+const _cache = new Map();
+function probReachFirst(winsA, winsB, pA) {
+  if (winsA <= 0) return 1;
+  if (winsB <= 0) return 0;
+  const key = winsA + "|" + winsB + "|" + pA.toFixed(5);
+  if (_cache.has(key)) return _cache.get(key);
+  const v = pA * probReachFirst(winsA - 1, winsB, pA) + (1 - pA) * probReachFirst(winsA, winsB - 1, pA);
+  _cache.set(key, v);
+  return v;
+}
+
+function runSimulations(N) {
+  const wins = DATA.users.map(() => 0);
+  const totalPoints = DATA.users.map(() => 0);
+  // Cache per-series probabilities for "from-scratch" sim of empty future series
+  for (let i = 0; i < N; i++) {
+    // Clone series with simulated winners
+    const simSeries = DATA.series.map(s => ({ ...s }));
+    // Process in order so feeder-based teams resolve naturally
+    for (const s of simSeries) {
+      // Resolve teams from feeders if needed
+      if (!s.teamA && s.feeders) {
+        const f = simSeries.find(x => x.id === s.feeders[0]);
+        s.teamA = f.winner; s.seedA = (f.winner === f.teamA ? f.seedA : f.seedB);
+      }
+      if (!s.teamB && s.feeders) {
+        const f = simSeries.find(x => x.id === s.feeders[1]);
+        s.teamB = f.winner; s.seedB = (f.winner === f.teamA ? f.seedA : f.seedB);
+      }
+      if (!s.winner) {
+        // Use probability functions on this simulated state
+        const pA = pSeriesAWinSim(s);
+        s.winner = Math.random() < pA ? s.teamA : s.teamB;
+        // Random game count for bonus calc (4-7 weighted slightly toward 6/7 if even)
+        const totalGames = 4 + Math.floor(Math.random() * 4);
+        if (s.winner === s.teamA) { s.gamesA = 4; s.gamesB = totalGames - 4; }
+        else                      { s.gamesB = 4; s.gamesA = totalGames - 4; }
+      }
+    }
+    // Score every user under this simulation
+    const scores = DATA.users.map((u) => {
+      let pts = 0;
+      for (const s of simSeries) {
+        if (u.picks[s.id] === s.winner) {
+          pts += DATA.scoring[s.round] || 0;
+          const tg = (s.gamesA || 0) + (s.gamesB || 0);
+          if (u.games && u.games[s.id] === tg) pts += DATA.scoring.GAMES_BONUS;
+        }
+      }
+      return pts;
+    });
+    // Tiebreaker: closest to a random Finals total points (180-260 range)
+    const tieTarget = 180 + Math.floor(Math.random() * 81);
+    let bestScore = -Infinity, candidates = [];
+    scores.forEach((p, idx) => {
+      if (p > bestScore) { bestScore = p; candidates = [idx]; }
+      else if (p === bestScore) candidates.push(idx);
+    });
+    let winnerIdx;
+    if (candidates.length === 1) winnerIdx = candidates[0];
+    else {
+      let best = Infinity, bestIdx = candidates[0];
+      for (const idx of candidates) {
+        const tb = DATA.users[idx].tiebreaker || 220;
+        const dist = Math.abs(tb - tieTarget);
+        if (dist < best) { best = dist; bestIdx = idx; }
+      }
+      winnerIdx = bestIdx;
+    }
+    wins[winnerIdx]++;
+    scores.forEach((p, idx) => totalPoints[idx] += p);
+  }
+  return DATA.users.map((u, idx) => ({
+    name: u.name,
+    pWin: wins[idx] / N,
+    expectedPoints: totalPoints[idx] / N,
+  }));
+}
+// pSeriesAWin during sim — handles fact that simulated series may have just had their teams set
+function pSeriesAWinSim(s) {
+  if (s.winner) return s.winner === s.teamA ? 1 : 0;
+  if (s.seedA == null || s.seedB == null) return 0.5;
+  const aIsHigher = s.seedA < s.seedB;
+  const seriesP = pSeedWin(s.seedA, s.seedB);
+  const pGameA = aIsHigher ? invertSeriesToGameP(seriesP) : 1 - invertSeriesToGameP(seriesP);
+  return probReachFirst(4 - (s.gamesA || 0), 4 - (s.gamesB || 0), pGameA);
+}
+
+/* =========================================================================
+   7. RENDER
+   ========================================================================= */
+function render() {
+  // Header bits
+  document.getElementById("group-tag").textContent =
+    DATA.groupName + " • " + DATA.users.length + " players • " +
+    DATA.series.filter(s => s.winner).length + "/" + DATA.series.length + " series decided";
+  document.getElementById("espn-link").href =
+    "https://fantasy.espn.com/games/" + DATA.challenge + "/group?id=" + DATA.groupId;
+  document.getElementById("last-updated").textContent =
+    "Updated " + new Date().toLocaleString();
+
+  renderLeaderboard();
+  renderProbability();
+  renderUserTabs();
+  renderBracket();
+
+  // populate tools textarea
+  document.getElementById("data-json").value = JSON.stringify(DATA, null, 2);
+}
+
+function renderLeaderboard() {
+  const rows = DATA.users.map(u => {
+    const s = userScore(u);
+    return { ...s, name: u.name };
+  }).sort((a, b) => b.earned - a.earned);
+  const body = document.getElementById("leaderboard");
+  body.innerHTML = rows.map((r, i) => {
+    const rank = i + 1;
+    const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : "";
+    const possible = maxPossiblePoints(r.name);
+    return `
+      <tr>
+        <td class="rank">${medal || rank}</td>
+        <td class="user">${escapeHTML(r.name)}</td>
+        <td class="pts">${r.earned}</td>
+        <td class="pts" style="color:var(--muted)">${possible}</td>
+        <td class="pts">${r.correct}/${DATA.series.length}</td>
+      </tr>`;
+  }).join("");
+}
+
+function maxPossiblePoints(userName) {
+  const u = DATA.users.find(x => x.name === userName);
+  if (!u) return 0;
+  let total = 0;
+  for (const s of DATA.series) {
+    if (s.winner) {
+      // already locked — was it correct?
+      if (u.picks[s.id] === s.winner) total += DATA.scoring[s.round] || 0;
+    } else {
+      // could the user's pick still win?
+      const pick = u.picks[s.id];
+      const stillAlive = pickStillAlive(s, pick);
+      if (stillAlive) total += DATA.scoring[s.round] || 0;
+    }
+  }
+  // Add already-earned games bonus (final values only)
+  for (const s of DATA.series) {
+    if (s.winner && u.picks[s.id] === s.winner) {
+      const tg = (s.gamesA || 0) + (s.gamesB || 0);
+      if (u.games && u.games[s.id] === tg) total += DATA.scoring.GAMES_BONUS;
+    }
+  }
+  return total;
+}
+function pickStillAlive(s, pickedTeam) {
+  if (!pickedTeam) return false;
+  if (s.winner) return s.winner === pickedTeam;
+  // R1: pick is alive if it's one of the two teams and hasn't lost yet (no winner)
+  if (s.teamA || s.teamB) {
+    return pickedTeam === s.teamA || pickedTeam === s.teamB;
+  }
+  // Later rounds: alive iff still alive in any feeder series (recursively)
+  if (s.feeders) {
+    for (const fid of s.feeders) {
+      const f = seriesById(fid);
+      if (f && pickStillAlive(f, pickedTeam)) return true;
+    }
+  }
+  return false;
+}
+
+function renderProbability() {
+  const N = 10000;
+  document.getElementById("sim-n").textContent = N.toLocaleString();
+  const results = runSimulations(N);
+  results.sort((a, b) => b.pWin - a.pWin);
+  const host = document.getElementById("prob");
+  host.innerHTML = results.map(r => {
+    const pct = (r.pWin * 100).toFixed(1);
+    return `
+      <div class="prob-row">
+        <div class="name">${escapeHTML(r.name)}</div>
+        <div class="bar"><div class="fill" style="width:${pct}%"></div></div>
+        <div class="pct">${pct}%</div>
+      </div>`;
+  }).join("");
+}
+
+function renderUserTabs() {
+  const tabs = document.getElementById("user-tabs");
+  tabs.innerHTML = DATA.users.map((u, i) =>
+    `<button class="user-tab ${i === activeUserIdx ? 'active' : ''}" data-i="${i}" title="${escapeHTML(u.teamName||u.name)}">${escapeHTML(u.name)}</button>`
+  ).join("");
+  tabs.querySelectorAll(".user-tab").forEach(btn => {
+    btn.addEventListener("click", () => {
+      activeUserIdx = parseInt(btn.dataset.i, 10);
+      renderUserTabs(); renderBracket();
+    });
+  });
+}
+
+function renderBracket() {
+  const u = DATA.users[activeUserIdx];
+  const host = document.getElementById("bracket-host");
+  if (!u) { host.innerHTML = ""; return; }
+  // Columns: West R1 | West R2 | WCF | FIN | ECF | East R2 | East R1
+  const wR1 = ["WR1-1","WR1-2","WR1-3","WR1-4"];
+  const wR2 = ["WR2-1","WR2-2"];
+  const eR1 = ["ER1-1","ER1-2","ER1-3","ER1-4"];
+  const eR2 = ["ER2-1","ER2-2"];
+  const cols = [
+    { label: "West R1", ids: wR1, cls: "r1" },
+    { label: "West Semis", ids: wR2, cls: "r2" },
+    { label: "West Finals", ids: ["WCF"], cls: "cf" },
+    { label: "East Finals", ids: ["ECF"], cls: "cf" },
+    { label: "East Semis", ids: eR2, cls: "r2" },
+    { label: "East R1", ids: eR1, cls: "r1" },
+  ];
+  host.innerHTML = `
+    ${renderChampionCard(u)}
+    <div class="bracket bracket-6col">
+      ${cols.map(c => `
+        <div>
+          <div class="col-label">${c.label}</div>
+          <div class="col ${c.cls}">
+            ${c.ids.map(id => renderPickCell(u, id)).join("")}
+          </div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+function renderChampionCard(u) {
+  const s = seriesById("FIN");
+  if (!s) return "";
+  const pick = u.picks["FIN"] || "—";
+  const color = teamColor(pick);
+  const color2 = (TEAMS[pick] && TEAMS[pick].color2) || "#000000";
+  const logo = teamLogo(pick);
+  const logoHTML = logo
+    ? `<img src="${logo}" alt="${escapeHTML(pick)}" class="champion-logo" onerror="this.style.display='none'">`
+    : "";
+  let cls = "pending";
+  if (s.winner) cls = s.winner === pick ? "correct" : "wrong";
+  else if (!pickStillAlive(s, pick)) cls = "wrong";
+  const status = s.winner
+    ? (s.winner === pick ? "Champion! 🎉" : `Eliminated — ${s.winner} won`)
+    : (cls === "wrong" ? "Already eliminated" : "Still alive");
+  return `
+    <div class="champion-card ${cls}" style="background: linear-gradient(135deg, ${color} 0%, ${color2} 100%)">
+      <div class="champion-label">🏆 NBA Finals Pick</div>
+      <div class="champion-body">
+        ${logoHTML}
+        <div class="champion-text">
+          <div class="champion-team">${escapeHTML(pick)} <span class="champion-name">${escapeHTML(teamName(pick))}</span></div>
+          <div class="champion-status">${escapeHTML(status)} · ${DATA.scoring.FIN}p</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+function renderPickCell(u, sid) {
+  const s = seriesById(sid);
+  if (!s) return "";
+  const pick = u.picks[sid] || "—";
+  const games = u.games && u.games[sid];
+  let cls = "pending";
+  if (s.winner) {
+    cls = s.winner === pick ? "correct" : "wrong";
+  } else if (!pickStillAlive(s, pick)) {
+    cls = "wrong"; // your pick is already eliminated
+  }
+  const color = teamColor(pick);
+  const subtitle = s.winner ? `Final • ${s.gamesA}-${s.gamesB}`
+                  : (s.gamesA + s.gamesB > 0 ? `Series ${s.gamesA}-${s.gamesB}` : "Pending");
+  const logo = teamLogo(pick);
+  const logoHTML = logo
+    ? `<img src="${logo}" alt="${escapeHTML(pick)}" class="team-logo" loading="lazy" onerror="this.style.display='none'">`
+    : "";
+  return `
+    <div class="pick ${cls}" style="border-left-color:${color}">
+      ${logoHTML}
+      <div class="pick-body">
+        <div><strong>${escapeHTML(pick)}</strong> <span style="opacity:.6;font-weight:600">${escapeHTML(teamName(pick))}</span></div>
+        <div class="games">${subtitle}${games ? ` • guessed ${games}g` : ""}</div>
+      </div>
+      <div class="pick-pts">${DATA.scoring[s.round]}p</div>
+    </div>
+  `;
+}
+
+function escapeHTML(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, c =>
+    ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+}
+
+/* =========================================================================
+   8. LIVE SCORES — ESPN public scoreboard (CORS-friendly endpoint)
+   ========================================================================= */
+async function loadLiveScores() {
+  const url = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard";
+  try {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const j = await r.json();
+    const events = (j.events || []).filter(e => {
+      // Only show playoff games. Type 3 == postseason in ESPN's NBA API.
+      const t = e.season && e.season.type;
+      return t === 3 || t === undefined; // be permissive
+    });
+    renderScores(events);
+  } catch (e) {
+    console.warn("Live scores failed:", e);
+    document.getElementById("scores").innerHTML =
+      `<div class="game-card"><div class="meta">Couldn't reach ESPN scoreboard</div>
+       <div class="row"><div>${escapeHTML(e.message)}</div></div></div>`;
+    document.getElementById("games-count").textContent = "0";
+  }
+}
+function renderScores(events) {
+  const host = document.getElementById("scores");
+  document.getElementById("games-count").textContent = events.length;
+  if (!events.length) {
+    host.innerHTML = `<div class="game-card"><div class="meta">No games scheduled today</div></div>`;
+    return;
+  }
+  host.innerHTML = events.map(ev => {
+    const c = (ev.competitions && ev.competitions[0]) || {};
+    const comps = c.competitors || [];
+    const home = comps.find(x => x.homeAway === "home") || comps[0] || {};
+    const away = comps.find(x => x.homeAway === "away") || comps[1] || {};
+    const status = (ev.status && ev.status.type) || {};
+    const isLive = status.state === "in";
+    const isFinal = status.state === "post";
+    const cls = isLive ? "live" : (isFinal ? "final" : "");
+    const detail = status.shortDetail || status.detail || "";
+    const series = (c.series && c.series.summary) || "";
+    const homeAbbr = (home.team && home.team.abbreviation) || "?";
+    const awayAbbr = (away.team && away.team.abbreviation) || "?";
+    return `
+      <div class="game-card ${cls}">
+        <div class="meta">${escapeHTML(series || "Playoffs")}</div>
+        <div class="row">
+          <div class="team"><span class="dot" style="background:${teamColor(awayAbbr)}"></span> ${escapeHTML(awayAbbr)}</div>
+          <div class="score">${escapeHTML(away.score || "0")}</div>
+        </div>
+        <div class="row">
+          <div class="team"><span class="dot" style="background:${teamColor(homeAbbr)}"></span> ${escapeHTML(homeAbbr)}</div>
+          <div class="score">${escapeHTML(home.score || "0")}</div>
+        </div>
+        <div class="status">${escapeHTML(detail)}</div>
+      </div>
+    `;
+  }).join("");
+}
+
+/* =========================================================================
+   9. AUTO-FETCH (best effort) — ESPN's gambit-api often blocks CORS, so we
+   surface the URL for manual fallback.
+   ========================================================================= */
+async function tryAutoFetch() {
+  const base = "https://gambit-api.fantasy.espn.com/apis/v1/challenges/" +
+    encodeURIComponent(DATA.challenge) + "/groups/" + encodeURIComponent(DATA.groupId);
+  // Try several views — ESPN uses different payload shapes per view
+  const views = [
+    "chui_default",
+    "chui_default_withPicks",
+    "chui_groupRoster",
+    "chui_leaderboard",
+    "chui_entries",
+    "", // no view param
+  ];
+  const results = {};
+  for (const v of views) {
+    const url = v ? (base + "?view=" + v) : base;
+    try {
+      const r = await fetch(url, { credentials: "include" });
+      if (!r.ok) { results[v || "(none)"] = { error: "HTTP " + r.status }; continue; }
+      const j = await r.json();
+      results[v || "(none)"] = j;
+    } catch (e) {
+      results[v || "(none)"] = { error: e.message };
+    }
+  }
+  // Pick the most interesting one (with entries, or most keys)
+  const summary = Object.entries(results).map(([v, j]) => {
+    if (j.error) return { view: v, keys: "ERROR: " + j.error, count: 0 };
+    const keys = Object.keys(j);
+    let count = 0;
+    for (const k of ["entries","leaderEntries","groupEntries","members"]) {
+      if (Array.isArray(j[k])) count = Math.max(count, j[k].length);
+    }
+    return { view: v, keys: keys.join(", "), count };
+  });
+  console.log("=== ESPN auto-fetch results ===");
+  console.log(summary);
+  console.log("Full responses:", results);
+  // Dump into the dedicated read-only output box so the user can copy it.
+  // IMPORTANT: we do NOT touch the DATA editor textarea — saving the dump there used to
+  // corrupt DATA. Keeping them separate means "Save & redraw" always saves real DATA.
+  const dump = {
+    __instructions: "Copy this ENTIRE object and paste it into chat with Claude. I'll map it into the dashboard's picks/users format.",
+    challenge: DATA.challenge,
+    groupId: DATA.groupId,
+    fetchedAt: new Date().toISOString(),
+    responses: results,
+  };
+  const out = document.getElementById("fetch-output");
+  out.value = JSON.stringify(dump, null, 2);
+  // Reveal + scroll + select the output box so the user can just Cmd+C
+  const tools = document.getElementById("tools");
+  tools.open = true;
+  out.scrollIntoView({ behavior: "smooth", block: "center" });
+  setTimeout(() => { out.focus(); out.select(); }, 400);
+  // Find which view had the largest usable payload
+  const best = summary.sort((a,b) => b.count - a.count || b.keys.length - a.keys.length)[0];
+  toast("Fetched " + best.count + " entries from view '" + best.view + "'. Output is selected — Cmd+C then paste to Claude.");
+}
+
+/* =========================================================================
+   10. UI WIRING
+   ========================================================================= */
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => t.classList.remove("show"), 3500);
+}
+function wireTools() {
+  document.getElementById("save-btn").addEventListener("click", () => {
+    let next;
+    try {
+      next = JSON.parse(document.getElementById("data-json").value);
+    } catch (e) {
+      toast("JSON parse error: " + e.message);
+      return;
+    }
+    if (!isValidData(next)) {
+      toast("Won't save — this doesn't look like a DATA object (needs users, series, scoring, groupId). Use the fetch-output box for ESPN dumps.");
+      return;
+    }
+    DATA = next; saveData(); render(); toast("Saved & redrawn ✓");
+  });
+  document.getElementById("reset-btn").addEventListener("click", () => {
+    DATA = JSON.parse(JSON.stringify(DEFAULT_DATA));
+    saveData(); render(); toast("Reset to default");
+    // refresh editor contents too
+    const ta = document.getElementById("data-json");
+    if (ta) ta.value = JSON.stringify(DATA, null, 2);
+  });
+  document.getElementById("fetch-btn").addEventListener("click", tryAutoFetch);
+  document.getElementById("export-btn").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(document.getElementById("data-json").value);
+      toast("Copied DATA JSON!");
+    } catch { toast("Copy failed — select & copy manually"); }
+  });
+  document.getElementById("fetch-copy-btn").addEventListener("click", async () => {
+    const v = document.getElementById("fetch-output").value;
+    if (!v) { toast("Fetch output is empty — click 'Try ESPN auto-fetch' first."); return; }
+    try { await navigator.clipboard.writeText(v); toast("Copied fetch output!"); }
+    catch { toast("Copy failed — select & copy manually"); }
+  });
+  document.getElementById("fetch-clear-btn").addEventListener("click", () => {
+    document.getElementById("fetch-output").value = "";
+    toast("Cleared fetch output");
+  });
+}
+
+/* =========================================================================
+   11. ESPN LIVE SYNC — pulls series winners & game counts from the public
+   scoreboard API so the dashboard stays current without manual edits.
+   ========================================================================= */
+// ESPN scoreboard uses a few 2-letter abbreviations; normalize to our 3-letter scheme.
+function normalizeESPNAbbr(raw) {
+  if (!raw) return raw;
+  const up = String(raw).toUpperCase();
+  const map = { SA: "SAS", NY: "NYK", GS: "GSW", NO: "NOP", UTAH: "UTA", WSH: "WAS" };
+  return map[up] || up;
+}
+
+// Full set of R1 teams that could reach this series (static from bracket structure).
+function seriesReachableTeams(s) {
+  if (!s) return new Set();
+  if (s.teamA || s.teamB) return new Set([s.teamA, s.teamB].filter(Boolean));
+  const out = new Set();
+  if (s.feeders) for (const fid of s.feeders) {
+    for (const t of seriesReachableTeams(seriesById(fid))) out.add(t);
+  }
+  return out;
+}
+
+// Given two team abbreviations from an ESPN playoff game, find which of our 15
+// series it belongs to.
+function findSeriesForTeams(t1, t2) {
+  for (const s of DATA.series) {
+    if (s.round === "R1") {
+      if ((s.teamA === t1 && s.teamB === t2) || (s.teamA === t2 && s.teamB === t1)) return s;
+    } else if (s.feeders) {
+      const rA = seriesReachableTeams(seriesById(s.feeders[0]));
+      const rB = seriesReachableTeams(seriesById(s.feeders[1]));
+      if ((rA.has(t1) && rB.has(t2)) || (rA.has(t2) && rB.has(t1))) return s;
+    }
+  }
+  return null;
+}
+
+function iso(d) {
+  const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, "0"), dd = String(d.getDate()).padStart(2, "0");
+  return `${y}${m}${dd}`;
+}
+
+// Fetch ESPN scoreboard for a single date. Cached in sessionStorage for
+// completed days (older than yesterday) so repeat loads are fast.
+async function fetchESPNDate(dateStr, isStale) {
+  const cacheKey = "espnSb_" + dateStr;
+  if (!isStale) {
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) { try { return JSON.parse(cached); } catch {} }
+  }
+  try {
+    const url = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${dateStr}&seasontype=3`;
+    const r = await fetch(url);
+    if (!r.ok) return [];
+    const j = await r.json();
+    const events = j.events || [];
+    if (!isStale) {
+      try { sessionStorage.setItem(cacheKey, JSON.stringify(events)); } catch {}
+    }
+    return events;
+  } catch (e) { return []; }
+}
+
+// Main sync routine. Walks every playoff date from opening day to tomorrow,
+// aggregates series state per team-pair, and writes winners/scores back.
+async function syncPlayoffSeriesFromESPN() {
+  const indicatorEl = document.getElementById("sync-indicator");
+  if (indicatorEl) indicatorEl.textContent = "Syncing from ESPN…";
+
+  // 2026 NBA playoffs opening day (first round tip-off), with a small buffer.
+  const start = new Date("2026-04-15T00:00:00");
+  const end = new Date(); end.setDate(end.getDate() + 1); // include tomorrow for TZ safety
+  const today = iso(new Date());
+
+  const dates = [];
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) dates.push(iso(d));
+
+  // Parallelize fetches (capped concurrency is overkill for ~60 dates).
+  const results = await Promise.all(dates.map(d => fetchESPNDate(d, d >= today)));
+
+  // Reduce all events into best-known state per team pair.
+  const perPair = new Map(); // key -> { abbrs, wins:{}, latestDate, anyLive }
+  for (const events of results) {
+    for (const ev of events) {
+      if (ev.season && ev.season.type !== 3) continue;
+      const c = (ev.competitions && ev.competitions[0]) || null;
+      if (!c) continue;
+      const comps = c.competitors || [];
+      if (comps.length < 2) continue;
+      const a1 = normalizeESPNAbbr(comps[0].team && comps[0].team.abbreviation);
+      const a2 = normalizeESPNAbbr(comps[1].team && comps[1].team.abbreviation);
+      if (!a1 || !a2) continue;
+      const seriesInfo = c.series;
+      if (!seriesInfo || !Array.isArray(seriesInfo.competitors)) continue;
+      const idToAbbr = {};
+      for (const cp of comps) idToAbbr[cp.id] = normalizeESPNAbbr(cp.team && cp.team.abbreviation);
+      const wins = {};
+      for (const sc of seriesInfo.competitors) wins[idToAbbr[sc.id]] = sc.wins;
+      if (wins[a1] == null || wins[a2] == null) continue;
+
+      const key = [a1, a2].sort().join("|");
+      const evDate = new Date(ev.date || 0);
+      const isLive = ev.status && ev.status.type && ev.status.type.state === "in";
+      const prev = perPair.get(key);
+      if (!prev || evDate > prev.latestDate) {
+        perPair.set(key, { abbrs: [a1, a2], wins, latestDate: evDate, anyLive: isLive });
+      } else if (isLive) {
+        prev.anyLive = true;
+      }
+    }
+  }
+
+  // Apply to our series. Iterate in round order so earlier-round winners
+  // propagate before later-round matches are evaluated.
+  const roundOrder = { R1: 0, R2: 1, CF: 2, FIN: 3 };
+  const sortedSeries = [...DATA.series].sort((a, b) => roundOrder[a.round] - roundOrder[b.round]);
+
+  let updates = 0;
+  for (const state of perPair.values()) {
+    const [tA, tB] = state.abbrs;
+    const s = sortedSeries.find(ss => {
+      if (ss.round === "R1") return (ss.teamA === tA && ss.teamB === tB) || (ss.teamA === tB && ss.teamB === tA);
+      if (!ss.feeders) return false;
+      const rA = seriesReachableTeams(seriesById(ss.feeders[0]));
+      const rB = seriesReachableTeams(seriesById(ss.feeders[1]));
+      return (rA.has(tA) && rB.has(tB)) || (rA.has(tB) && rB.has(tA));
+    });
+    if (!s) continue;
+
+    // Determine which team goes in slot A vs B. For R1 it's fixed by bracket.
+    // For later rounds we use feeder[0] vs feeder[1] reachability.
+    let teamInA = tA, teamInB = tB;
+    if (s.round === "R1") {
+      if (s.teamA === tB) { teamInA = tB; teamInB = tA; }
+    } else {
+      const rA = seriesReachableTeams(seriesById(s.feeders[0]));
+      if (rA.has(tB)) { teamInA = tB; teamInB = tA; }
+      // Fill in the effective teams so the bracket UI shows them.
+      s.teamA = teamInA;
+      s.teamB = teamInB;
+    }
+    const winsA = state.wins[teamInA];
+    const winsB = state.wins[teamInB];
+    let winner = null;
+    if (winsA >= 4) winner = teamInA;
+    else if (winsB >= 4) winner = teamInB;
+    const status = winner ? "final" : (state.anyLive ? "in-progress" : (winsA + winsB > 0 ? "in-progress" : "upcoming"));
+
+    if (s.gamesA !== winsA || s.gamesB !== winsB || s.winner !== winner || s.status !== status) {
+      s.gamesA = winsA;
+      s.gamesB = winsB;
+      s.winner = winner;
+      s.status = status;
+      updates++;
+    }
+  }
+
+  if (updates > 0) render();
+  if (indicatorEl) {
+    const stamp = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    indicatorEl.textContent = updates > 0
+      ? `Synced ${updates} series · ${stamp}`
+      : `Up to date · ${stamp}`;
+  }
+}
+
+/* =========================================================================
+   12. BOOT
+   ========================================================================= */
+DATA = loadData();
+render();
+wireTools();
+loadLiveScores();
+setInterval(loadLiveScores, 60000); // refresh scores every minute
+syncPlayoffSeriesFromESPN();
+setInterval(syncPlayoffSeriesFromESPN, 5 * 60000); // re-sync every 5 min
+</script>
+</body>
+</html>
