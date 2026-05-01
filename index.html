@@ -1536,17 +1536,19 @@ function scoreSentiment(text) {
   return s;
 }
 
-// Reddit blocks direct browser fetches via CORS — route through public proxies.
-// We try them in order and use whichever succeeds first.
-const CORS_PROXIES = [
+// Reddit blocks direct browser fetches via CORS. Primary path is our own
+// Netlify Function (server-side proxy with a real User-Agent — most reliable).
+// Fallbacks: a couple of public CORS proxies, in case the Function is unreachable
+// (e.g. opening index.html locally instead of via the deployed Netlify URL).
+const REDDIT_PROXIES = [
+  url => `/.netlify/functions/reddit?url=${encodeURIComponent(url)}`,
   url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
   url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-  url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
 ];
 
 async function fetchJSONviaProxy(url) {
   let lastErr = null;
-  for (const proxify of CORS_PROXIES) {
+  for (const proxify of REDDIT_PROXIES) {
     try {
       const r = await fetch(proxify(url), { headers: { "Accept": "application/json" } });
       if (!r.ok) { lastErr = new Error("HTTP " + r.status); continue; }
@@ -1559,10 +1561,11 @@ async function fetchJSONviaProxy(url) {
           if (wrapped && typeof wrapped.contents === "string") return JSON.parse(wrapped.contents);
         } catch {}
         lastErr = new Error("Bad JSON from proxy");
+        continue;
       }
     } catch (e) { lastErr = e; }
   }
-  throw lastErr || new Error("All CORS proxies failed");
+  throw lastErr || new Error("All Reddit proxies failed");
 }
 
 async function loadRedditFeed(awayAbbr, homeAbbr) {
