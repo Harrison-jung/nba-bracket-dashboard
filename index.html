@@ -275,28 +275,54 @@
   .pbp-clock { color: var(--gold); font-family: var(--mono); font-weight: 700; }
   .pbp-score { color: var(--ink); font-family: var(--mono); font-weight: 700; }
 
-  /* Sentiment meter for Reddit */
-  .sentiment {
-    display: flex; align-items: center; gap: 10px;
-    margin-bottom: 12px; padding: 8px 10px;
-    background: rgba(255,255,255,.02); border-left: 3px solid var(--gold);
+  /* Live odds board */
+  .odds-board { display: grid; gap: 8px; }
+  .odds-board .odds-row {
+    display: grid; grid-template-columns: 90px 1fr 1fr 1fr;
+    align-items: center; gap: 6px; padding: 12px 14px;
+    background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+    border-left: 3px solid var(--bg-elev3);
+    font-family: var(--mono); font-size: 14px; font-weight: 700;
+    color: var(--ink);
   }
-  .sentiment .label {
-    font-family: var(--mono); font-size: 10px; color: var(--ink-dim);
-    text-transform: uppercase; letter-spacing: .12em;
+  .odds-board .odds-row.fav { border-left-color: var(--gold); }
+  .odds-board .odds-row.dog { border-left-color: var(--red); }
+  .odds-board .odds-row.head {
+    background: transparent; border-left: none; padding: 4px 14px 0;
+    font-size: 10px; color: var(--muted); letter-spacing: .14em;
+    text-transform: uppercase; font-weight: 700;
   }
-  .sentiment .bar { flex: 1; height: 6px; background: var(--bg-elev3); position: relative; overflow: hidden; }
-  .sentiment .bar .fill {
-    position: absolute; top: 0; bottom: 0; left: 50%;
-    transform-origin: left center;
-    background: linear-gradient(90deg, var(--green), var(--gold));
+  .odds-board .odds-team {
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--display); font-size: 18px; letter-spacing: .03em;
+    text-transform: uppercase; font-weight: 400;
   }
-  .sentiment .bar .fill.neg {
-    background: linear-gradient(270deg, var(--red), var(--gold));
-    transform-origin: right center;
-    left: auto; right: 50%;
+  .odds-board .odds-team img {
+    width: 26px; height: 26px; object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,.5));
   }
-  .sentiment .score-num { font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--ink); }
+  .odds-board .odds-cell { font-variant-numeric: tabular-nums; }
+  .odds-board .odds-cell .dim { color: var(--muted); font-size: 11px; margin-left: 4px; }
+  .odds-board .odds-cell.gold { color: var(--gold); }
+  .odds-board .odds-cell.red { color: var(--red-hot); }
+  .odds-providers {
+    margin-top: 8px; padding: 8px 12px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
+    color: var(--muted); text-transform: uppercase;
+    border-top: 1px dashed var(--line);
+  }
+  .odds-providers strong { color: var(--gold); font-weight: 700; }
+  .odds-providers .also { color: var(--ink-dim); margin: 0 6px; }
+  .odds-meta {
+    display: flex; gap: 14px; padding: 6px 12px 12px;
+    font-family: var(--mono); font-size: 11px; color: var(--ink-dim);
+    letter-spacing: .04em;
+  }
+  .odds-meta .lbl { color: var(--gold); font-weight: 700; }
+  .odds-empty-note {
+    color: var(--muted); font-size: 12px; padding: 16px 4px;
+    text-align: center; font-style: italic;
+  }
 
   /* Game selector tabs for the feed */
   .game-selector { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
@@ -590,12 +616,11 @@
     <div class="feed-grid">
       <div class="card feed-card">
         <div class="feed-head">
-          <div class="feed-title">r/nba Game Thread</div>
-          <div class="feed-tag" id="reddit-tag">Reddit</div>
+          <div class="feed-title">Live Odds Board</div>
+          <div class="feed-tag" id="odds-tag">Vegas</div>
         </div>
-        <div id="reddit-sentiment"></div>
-        <div class="feed-list" id="reddit-feed">
-          <div class="feed-empty">Pick a game above to load Reddit reactions.</div>
+        <div id="odds-board">
+          <div class="feed-empty">Pick a game above to load live odds.</div>
         </div>
       </div>
       <div class="card feed-card">
@@ -1518,132 +1543,122 @@ function selectFeedGame(eventId) {
   // Re-render selector to update active state
   renderFeedSelector(LIVE_GAMES_CACHE);
   // Kick off both feeds in parallel
-  loadRedditFeed(awayAbbr, homeAbbr);
+  loadOddsBoard(eventId);
   loadPlayByPlayFeed(eventId);
 }
 window.selectFeedGame = selectFeedGame;
 
-/* ----- Reddit r/nba game thread + sentiment ----- */
-const POS_WORDS = ["amazing","goat","unstoppable","cooking","fire","lock","dominant","poster","clutch","mvp","beautiful","masterpiece","insane","love","carrying","let's go","lets go","🔥","👑","🐐","💯"];
-const NEG_WORDS = ["awful","terrible","trash","ass","horrible","choke","choking","dogshit","collapse","disaster","bum","cheating","ref","reffing","robbed","wtf","embarrassing","yikes","cooked","💩","😭"];
+/* ----- Live odds board (ESPN summary pickcenter) -----
+   ESPN's summary endpoint returns a `pickcenter` array with lines from multiple
+   sportsbooks (DraftKings, FanDuel, BetMGM, ESPN BET). It's CORS-allowed, so
+   we can fetch it directly from the browser — no proxy needed. */
 
-function scoreSentiment(text) {
-  if (!text) return 0;
-  const lower = text.toLowerCase();
-  let s = 0;
-  for (const w of POS_WORDS) if (lower.includes(w)) s += 1;
-  for (const w of NEG_WORDS) if (lower.includes(w)) s -= 1;
-  return s;
-}
+const PREFERRED_BOOKS = ["DraftKings", "FanDuel", "BetMGM", "Caesars Sportsbook", "ESPN BET", "Bet365"];
 
-// Reddit blocks direct browser fetches via CORS. Primary path is our own
-// Netlify Function (server-side proxy with a real User-Agent — most reliable).
-// Fallbacks: a couple of public CORS proxies, in case the Function is unreachable
-// (e.g. opening index.html locally instead of via the deployed Netlify URL).
-const REDDIT_PROXIES = [
-  url => `/.netlify/functions/reddit?url=${encodeURIComponent(url)}`,
-  url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-];
-
-async function fetchJSONviaProxy(url) {
-  let lastErr = null;
-  for (const proxify of REDDIT_PROXIES) {
-    try {
-      const r = await fetch(proxify(url), { headers: { "Accept": "application/json" } });
-      const text = await r.text();
-      // Try to parse as JSON regardless — our Netlify Function returns structured
-      // JSON errors with HTTP 502 that are still useful to surface.
-      let parsed = null;
-      try { parsed = JSON.parse(text); }
-      catch {
-        // allorigins.win sometimes wraps JSON in {contents:"..."}
-        try {
-          const wrapped = JSON.parse(text);
-          if (wrapped && typeof wrapped.contents === "string") parsed = JSON.parse(wrapped.contents);
-        } catch {}
-      }
-      if (parsed && parsed.error) {
-        lastErr = new Error(parsed.error + (parsed.bodyPreview ? ` — ${parsed.bodyPreview.slice(0, 120)}` : ""));
-        continue;
-      }
-      if (!r.ok) { lastErr = new Error("HTTP " + r.status); continue; }
-      if (parsed) return parsed;
-      lastErr = new Error("Bad JSON from proxy");
-    } catch (e) { lastErr = e; }
+function pickPrimaryBook(pickcenter) {
+  if (!pickcenter || !pickcenter.length) return null;
+  for (const name of PREFERRED_BOOKS) {
+    const m = pickcenter.find(p => p.provider && p.provider.name === name);
+    if (m) return m;
   }
-  throw lastErr || new Error("All Reddit proxies failed");
+  return pickcenter[0];
 }
 
-async function loadRedditFeed(awayAbbr, homeAbbr) {
-  const list = document.getElementById("reddit-feed");
-  const sentBox = document.getElementById("reddit-sentiment");
-  list.innerHTML = `<div class="feed-empty">Searching r/nba for the game thread…</div>`;
-  sentBox.innerHTML = "";
+function fmtAmerican(n) {
+  if (n == null || n === "") return "—";
+  const v = parseInt(n, 10);
+  if (isNaN(v)) return String(n);
+  return v > 0 ? `+${v}` : `${v}`;
+}
+function fmtSpread(n) {
+  if (n == null) return "—";
+  return n > 0 ? `+${n}` : `${n}`;
+}
+
+async function loadOddsBoard(eventId) {
+  const host = document.getElementById("odds-board");
+  host.innerHTML = `<div class="feed-empty">Loading live odds…</div>`;
   try {
-    // Reddit JSON search — find a recent game thread mentioning both team abbreviations
-    const searchUrl = `https://www.reddit.com/r/nba/search.json?q=flair%3A%22Game+Thread%22&restrict_sr=1&sort=new&limit=25&t=day`;
-    const j = await fetchJSONviaProxy(searchUrl);
-    const posts = ((j.data && j.data.children) || []).map(c => c.data);
-    // Match by team city / nickname tokens
-    const tokens = [awayAbbr, homeAbbr, teamName(awayAbbr), teamName(homeAbbr), TEAMS[awayAbbr] && TEAMS[awayAbbr].city, TEAMS[homeAbbr] && TEAMS[homeAbbr].city]
-      .filter(Boolean).map(t => t.toLowerCase());
-    const post = posts.find(p => {
-      const t = (p.title || "").toLowerCase();
-      let hits = 0;
-      for (const tk of tokens) if (t.includes(tk.toLowerCase())) hits++;
-      return hits >= 2;
-    }) || posts[0];
-    if (!post) {
-      list.innerHTML = `<div class="feed-empty">No active r/nba game thread found.</div>`;
+    const url = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${encodeURIComponent(eventId)}`;
+    const r = await fetch(url);
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const j = await r.json();
+    const pickcenter = j.pickcenter || [];
+    const status = (j.header && j.header.competitions && j.header.competitions[0] && j.header.competitions[0].status) || {};
+    const isFinal = status.type && status.type.state === "post";
+
+    if (!pickcenter.length) {
+      host.innerHTML = `<div class="odds-empty-note">${isFinal ? "Game is final — no live odds." : "Live odds aren't posted for this game yet."}</div>`;
       return;
     }
-    // Fetch top comments via the same proxy chain
-    const cUrl = `https://www.reddit.com/comments/${post.id}.json?limit=50&sort=top`;
-    const cj = await fetchJSONviaProxy(cUrl);
-    const raw = ((cj[1] && cj[1].data && cj[1].data.children) || []).map(c => c.data);
-    const comments = raw.filter(c => c.body && !c.stickied).slice(0, 18);
-    if (!comments.length) {
-      list.innerHTML = `<div class="feed-empty">Game thread found, but no comments yet.</div>`;
-      return;
-    }
-    // Sentiment aggregate
-    let pos = 0, neg = 0;
-    for (const c of comments) {
-      const s = scoreSentiment(c.body);
-      if (s > 0) pos += s;
-      else if (s < 0) neg += -s;
-    }
-    const total = pos + neg || 1;
-    const posPct = (pos / total) * 100;
-    const negPct = (neg / total) * 100;
-    const net = pos - neg;
-    sentBox.innerHTML = `
-      <div class="sentiment">
-        <span class="label">Crowd</span>
-        <div class="bar">
-          <div class="fill neg" style="width:${negPct/2}%"></div>
-          <div class="fill" style="width:${posPct/2}%"></div>
+    const primary = pickPrimaryBook(pickcenter);
+    if (!primary) { host.innerHTML = `<div class="odds-empty-note">No odds available.</div>`; return; }
+
+    // Identify away/home from the header competition
+    const comp = (j.header && j.header.competitions && j.header.competitions[0]) || {};
+    const comps = comp.competitors || [];
+    const home = comps.find(x => x.homeAway === "home") || comps[0] || {};
+    const away = comps.find(x => x.homeAway === "away") || comps[1] || {};
+    const homeAbbr = normalizeESPNAbbr((home.team && home.team.abbreviation) || "");
+    const awayAbbr = normalizeESPNAbbr((away.team && away.team.abbreviation) || "");
+
+    // Pull lines (ESPN's payload has multiple shapes — try in priority order)
+    const spread = primary.spread != null ? primary.spread : (primary.current && primary.current.spread && primary.current.spread.value);
+    const total  = primary.overUnder != null ? primary.overUnder : (primary.current && primary.current.total && primary.current.total.value);
+    const homeML = (primary.homeTeamOdds && primary.homeTeamOdds.moneyLine) ?? (primary.current && primary.current.homeMoneyLine && primary.current.homeMoneyLine.american);
+    const awayML = (primary.awayTeamOdds && primary.awayTeamOdds.moneyLine) ?? (primary.current && primary.current.awayMoneyLine && primary.current.awayMoneyLine.american);
+    const homeSpreadOdds = (primary.homeTeamOdds && primary.homeTeamOdds.spreadOdds);
+    const awaySpreadOdds = (primary.awayTeamOdds && primary.awayTeamOdds.spreadOdds);
+
+    // ESPN gives the spread relative to the home team (negative = home favored)
+    const homeSpread = spread;
+    const awaySpread = spread != null ? -spread : null;
+    const homeIsFav = spread != null && spread < 0;
+    const awayIsFav = spread != null && spread > 0;
+
+    // Provider list (top 3 + count of others)
+    const others = pickcenter.filter(p => p !== primary).map(p => p.provider && p.provider.name).filter(Boolean);
+    const otherList = others.slice(0, 3);
+    const moreCount = Math.max(0, others.length - otherList.length);
+
+    host.innerHTML = `
+      <div class="odds-board">
+        <div class="odds-row head">
+          <div></div>
+          <div>Spread</div>
+          <div>Money</div>
+          <div>Total</div>
         </div>
-        <span class="score-num">${net >= 0 ? '+' : ''}${net}</span>
+        <div class="odds-row ${awayIsFav ? 'fav' : (homeIsFav ? 'dog' : '')}">
+          <div class="odds-team">
+            <img src="${teamLogo(awayAbbr)}" onerror="this.style.visibility='hidden'" alt="">
+            ${escapeHTML(awayAbbr)}
+          </div>
+          <div class="odds-cell ${awayIsFav ? 'gold' : ''}">${awaySpread != null ? fmtSpread(awaySpread) : '—'}<span class="dim">${awaySpreadOdds != null ? fmtAmerican(awaySpreadOdds) : ''}</span></div>
+          <div class="odds-cell ${awayIsFav ? 'gold' : ''}">${fmtAmerican(awayML)}</div>
+          <div class="odds-cell">${total != null ? `O ${total}` : '—'}</div>
+        </div>
+        <div class="odds-row ${homeIsFav ? 'fav' : (awayIsFav ? 'dog' : '')}">
+          <div class="odds-team">
+            <img src="${teamLogo(homeAbbr)}" onerror="this.style.visibility='hidden'" alt="">
+            ${escapeHTML(homeAbbr)}
+          </div>
+          <div class="odds-cell ${homeIsFav ? 'gold' : ''}">${homeSpread != null ? fmtSpread(homeSpread) : '—'}<span class="dim">${homeSpreadOdds != null ? fmtAmerican(homeSpreadOdds) : ''}</span></div>
+          <div class="odds-cell ${homeIsFav ? 'gold' : ''}">${fmtAmerican(homeML)}</div>
+          <div class="odds-cell">${total != null ? `U ${total}` : '—'}</div>
+        </div>
+        <div class="odds-providers">
+          Lines from <strong>${escapeHTML((primary.provider && primary.provider.name) || "Sportsbook")}</strong>
+          ${otherList.length ? `<span class="also">·</span> Also: ${otherList.map(n => `<span>${escapeHTML(n)}</span>`).join(" · ")}${moreCount ? ` +${moreCount} more` : ""}` : ""}
+        </div>
       </div>
     `;
-    list.innerHTML = comments.map(c => {
-      const s = scoreSentiment(c.body);
-      const cls = c.score > 50 ? "high" : "";
-      const body = (c.body || "").replace(/\n+/g, " ").slice(0, 240);
-      const sent = s > 0 ? "🔥" : s < 0 ? "❄️" : "·";
-      return `
-        <div class="feed-item ${cls}">
-          <div class="feed-meta">
-            <span class="pts">▲ ${c.score || 0}</span> · ${escapeHTML(c.author || "anon")} · ${sent}
-          </div>
-          <div class="feed-text">${escapeHTML(body)}</div>
-        </div>
-      `;
-    }).join("");
+
+    // Update the panel tag with the book name
+    const tag = document.getElementById("odds-tag");
+    if (tag) tag.textContent = (primary.provider && primary.provider.name) || "Vegas";
   } catch (e) {
-    list.innerHTML = `<div class="feed-empty">Reddit feed unavailable: ${escapeHTML(e.message)}</div>`;
+    host.innerHTML = `<div class="feed-empty">Odds unavailable: ${escapeHTML(e.message)}</div>`;
   }
 }
 
@@ -1983,19 +1998,13 @@ loadLiveScores();
 setInterval(loadLiveScores, 60000); // refresh scores every minute
 syncPlayoffSeriesFromESPN();
 setInterval(syncPlayoffSeriesFromESPN, 5 * 60000); // re-sync every 5 min
-// Refresh live feed (Reddit + PBP) every 45s when a game is selected and is live
+// Refresh live feed (odds + PBP) every 45s when a live game is selected
 setInterval(() => {
   if (!activeFeedGameId) return;
   const ev = LIVE_GAMES_CACHE.find(e => e.id === activeFeedGameId);
   const isLive = ev && ev.status && ev.status.type && ev.status.type.state === "in";
   if (!isLive) return;
-  const c = (ev.competitions && ev.competitions[0]) || {};
-  const comps = c.competitors || [];
-  const home = comps.find(x => x.homeAway === "home") || comps[0] || {};
-  const away = comps.find(x => x.homeAway === "away") || comps[1] || {};
-  const homeAbbr = normalizeESPNAbbr((home.team && home.team.abbreviation) || "?");
-  const awayAbbr = normalizeESPNAbbr((away.team && away.team.abbreviation) || "?");
-  loadRedditFeed(awayAbbr, homeAbbr);
+  loadOddsBoard(activeFeedGameId);
   loadPlayByPlayFeed(activeFeedGameId);
 }, 45000);
 </script>
