@@ -1536,6 +1536,35 @@ function scoreSentiment(text) {
   return s;
 }
 
+// Reddit blocks direct browser fetches via CORS — route through public proxies.
+// We try them in order and use whichever succeeds first.
+const CORS_PROXIES = [
+  url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+];
+
+async function fetchJSONviaProxy(url) {
+  let lastErr = null;
+  for (const proxify of CORS_PROXIES) {
+    try {
+      const r = await fetch(proxify(url), { headers: { "Accept": "application/json" } });
+      if (!r.ok) { lastErr = new Error("HTTP " + r.status); continue; }
+      const text = await r.text();
+      // allorigins.win sometimes wraps JSON in {contents:"..."} — handle both shapes
+      try { return JSON.parse(text); }
+      catch {
+        try {
+          const wrapped = JSON.parse(text);
+          if (wrapped && typeof wrapped.contents === "string") return JSON.parse(wrapped.contents);
+        } catch {}
+        lastErr = new Error("Bad JSON from proxy");
+      }
+    } catch (e) { lastErr = e; }
+  }
+  throw lastErr || new Error("All CORS proxies failed");
+}
+
 async function loadRedditFeed(awayAbbr, homeAbbr) {
   const list = document.getElementById("reddit-feed");
   const sentBox = document.getElementById("reddit-sentiment");
@@ -1544,9 +1573,7 @@ async function loadRedditFeed(awayAbbr, homeAbbr) {
   try {
     // Reddit JSON search — find a recent game thread mentioning both team abbreviations
     const searchUrl = `https://www.reddit.com/r/nba/search.json?q=flair%3A%22Game+Thread%22&restrict_sr=1&sort=new&limit=25&t=day`;
-    const r = await fetch(searchUrl);
-    if (!r.ok) throw new Error("HTTP " + r.status);
-    const j = await r.json();
+    const j = await fetchJSONviaProxy(searchUrl);
     const posts = ((j.data && j.data.children) || []).map(c => c.data);
     // Match by team city / nickname tokens
     const tokens = [awayAbbr, homeAbbr, teamName(awayAbbr), teamName(homeAbbr), TEAMS[awayAbbr] && TEAMS[awayAbbr].city, TEAMS[homeAbbr] && TEAMS[homeAbbr].city]
@@ -1561,10 +1588,9 @@ async function loadRedditFeed(awayAbbr, homeAbbr) {
       list.innerHTML = `<div class="feed-empty">No active r/nba game thread found.</div>`;
       return;
     }
-    // Fetch top comments
+    // Fetch top comments via the same proxy chain
     const cUrl = `https://www.reddit.com/comments/${post.id}.json?limit=50&sort=top`;
-    const cr = await fetch(cUrl);
-    const cj = await cr.json();
+    const cj = await fetchJSONviaProxy(cUrl);
     const raw = ((cj[1] && cj[1].data && cj[1].data.children) || []).map(c => c.data);
     const comments = raw.filter(c => c.body && !c.stickied).slice(0, 18);
     if (!comments.length) {
