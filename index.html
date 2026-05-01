@@ -3,163 +3,409 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>🏀 Bracket Brawl 2026</title>
+<title>🏀 Bracket Brawl 2026 — On the Floor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
-  /* ---------- Base ---------- */
+  /* ============================================================
+     TNT-BROADCAST THEME — deep navy/black, gold + red accents,
+     sharp angular cards, big bold uppercase type
+     ============================================================ */
   :root {
-    --bg-1: #ff6a3d;
-    --bg-2: #ff2e63;
-    --bg-3: #6a4cff;
-    --bg-4: #00d4ff;
-    --ink: #1a1033;
-    --paper: #fffaf2;
-    --card: #ffffff;
-    --muted: #6b6480;
-    --gold: #ffd23f;
-    --silver: #c0c5cc;
-    --bronze: #cd7f32;
-    --good: #21d07a;
-    --bad: #ff4d6d;
-    --shadow: 0 10px 30px rgba(26, 16, 51, .15);
+    --bg-deep:   #05070d;
+    --bg-elev1:  #0c1220;
+    --bg-elev2:  #131a2c;
+    --bg-elev3:  #1b2440;
+    --line:      rgba(255,255,255,.08);
+    --line-hot:  rgba(255,184,28,.35);
+    --ink:       #f3f5fb;
+    --ink-dim:   #aab2c5;
+    --muted:     #6c7593;
+    --gold:      #FFB81C;
+    --gold-dim:  #c79214;
+    --red:       #DC2626;
+    --red-hot:   #FF3636;
+    --green:     #18d27b;
+    --silver:    #c0c5cc;
+    --bronze:    #cd7f32;
+    --shadow:    0 12px 36px rgba(0,0,0,.55);
+    --shadow-glow: 0 0 0 1px rgba(255,184,28,.2), 0 12px 36px rgba(0,0,0,.55);
+    --display:   "Anton", "Inter", -apple-system, sans-serif;
+    --body:      "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --mono:      "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --clip-card: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+    --clip-tab:  polygon(8px 0, 100% 0, 100% 100%, 0 100%, 0 8px);
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    background:
-      radial-gradient(1200px 600px at 10% -10%, rgba(255,106,61,.35), transparent 60%),
-      radial-gradient(900px 500px at 100% 0%, rgba(106,76,255,.35), transparent 60%),
-      linear-gradient(180deg, #fff5ec 0%, #fff 60%);
+    font-family: var(--body);
     color: var(--ink);
+    background:
+      radial-gradient(900px 480px at 8% -8%, rgba(220,38,38,.18), transparent 60%),
+      radial-gradient(1100px 600px at 100% 0%, rgba(255,184,28,.12), transparent 65%),
+      radial-gradient(700px 380px at 50% 110%, rgba(33,80,160,.18), transparent 60%),
+      linear-gradient(180deg, #05070d 0%, #060912 60%, #05070d 100%);
+    background-attachment: fixed;
     min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
   }
-  .wrap { max-width: 1200px; margin: 0 auto; padding: 24px; }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 22px 22px 60px; }
 
-  /* ---------- Header ---------- */
+  /* Subtle scanline + courtside glow overlays */
+  body::before {
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background: repeating-linear-gradient(
+      to bottom, transparent 0 2px, rgba(255,255,255,.012) 2px 3px
+    );
+    mix-blend-mode: overlay;
+  }
+  .wrap > * { position: relative; z-index: 1; }
+
+  /* ---------- Header (broadcast lower-third) ---------- */
   header.hero {
-    background: linear-gradient(135deg, var(--bg-1), var(--bg-2) 40%, var(--bg-3) 80%, var(--bg-4));
-    color: white;
-    border-radius: 28px;
-    padding: 28px 28px 24px;
-    box-shadow: var(--shadow);
     position: relative;
+    padding: 22px 26px 22px 28px;
+    background:
+      linear-gradient(135deg, rgba(255,184,28,.06), transparent 50%),
+      linear-gradient(180deg, var(--bg-elev2), var(--bg-elev1));
+    border: 1px solid var(--line);
+    border-left: 5px solid var(--gold);
+    clip-path: var(--clip-card);
     overflow: hidden;
   }
-  header.hero::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(600px 200px at 80% 0%, rgba(255,255,255,.25), transparent 60%);
+  header.hero::before {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(600px 220px at 90% 0%, rgba(220,38,38,.15), transparent 70%);
     pointer-events: none;
   }
-  .hero-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  header.hero::after {
+    content: ""; position: absolute; right: 18px; top: 14px; bottom: 14px; width: 3px;
+    background: linear-gradient(180deg, var(--red), transparent);
+    opacity: .5;
+  }
+  .hero-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; position: relative; }
   .hero h1 {
     margin: 0;
-    font-size: clamp(28px, 4vw, 44px);
-    font-weight: 900;
-    letter-spacing: -0.02em;
-    line-height: 1;
+    font-family: var(--display);
+    font-size: clamp(38px, 5.5vw, 64px);
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    line-height: .92;
+    text-transform: uppercase;
+    color: var(--ink);
+    text-shadow: 0 2px 0 #000, 0 0 28px rgba(255,184,28,.18);
   }
-  .hero h1 .emoji { filter: drop-shadow(0 2px 0 rgba(0,0,0,.15)); }
-  .hero p.tag { margin: 8px 0 0; opacity: .9; font-weight: 500; }
+  .hero h1 .accent { color: var(--gold); }
+  .hero h1 .slash { color: var(--red); margin: 0 6px; }
+  .hero p.tag {
+    margin: 8px 0 0; color: var(--ink-dim); font-weight: 600;
+    font-size: 13px; letter-spacing: .04em;
+  }
+  .hero p.tag .sep { color: var(--gold); margin: 0 8px; opacity: .8; }
   .hero .links { display: flex; gap: 8px; flex-wrap: wrap; }
   .pill {
     display: inline-flex; align-items: center; gap: 6px;
-    background: rgba(255,255,255,.18);
-    border: 1px solid rgba(255,255,255,.35);
-    color: white; text-decoration: none;
-    padding: 8px 12px; border-radius: 999px; font-size: 13px; font-weight: 600;
-    backdrop-filter: blur(6px);
+    background: rgba(255,255,255,.04);
+    border: 1px solid var(--line);
+    color: var(--ink-dim); text-decoration: none;
+    padding: 8px 14px; font-size: 11px; font-weight: 800;
+    letter-spacing: .12em; text-transform: uppercase;
+    clip-path: var(--clip-tab);
+    transition: all .15s ease;
   }
-  .pill:hover { background: rgba(255,255,255,.3); }
+  .pill:hover { background: rgba(255,184,28,.1); color: var(--gold); border-color: var(--line-hot); }
+  .pill.live { color: var(--red-hot); border-color: rgba(220,38,38,.4); }
+  .pill.live::before {
+    content: ""; width: 7px; height: 7px; background: var(--red-hot); border-radius: 50%;
+    box-shadow: 0 0 8px var(--red-hot); animation: pulse 1.4s infinite;
+  }
 
   /* ---------- Sections ---------- */
   section { margin-top: 28px; }
   h2.section {
-    margin: 0 0 12px;
-    font-size: 22px; letter-spacing: -.01em; font-weight: 800;
-    display: flex; align-items: center; gap: 8px;
+    margin: 0 0 14px;
+    font-family: var(--display); font-size: 26px; letter-spacing: .04em;
+    font-weight: 400; text-transform: uppercase; color: var(--ink);
+    display: flex; align-items: center; gap: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+    position: relative;
+  }
+  h2.section::before {
+    content: ""; width: 6px; height: 22px; background: var(--gold);
+    box-shadow: 0 0 12px rgba(255,184,28,.5);
   }
   h2.section .badge {
-    font-size: 12px; font-weight: 700; padding: 4px 8px; border-radius: 999px;
-    background: var(--ink); color: white;
+    font-family: var(--mono); font-size: 11px; font-weight: 700;
+    padding: 4px 10px; background: var(--red); color: white;
+    letter-spacing: .08em;
+  }
+  h2.section .sub { font-family: var(--body); font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .12em; color: var(--muted); margin-left: auto; }
+
+  /* ---------- Card primitive ---------- */
+  .card {
+    background: linear-gradient(180deg, var(--bg-elev1), var(--bg-deep));
+    border: 1px solid var(--line);
+    clip-path: var(--clip-card);
+    padding: 20px 22px 16px;
+    position: relative;
+  }
+  .card::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: linear-gradient(180deg, var(--gold), transparent);
+    opacity: .65;
   }
 
-  /* ---------- Live scores ---------- */
+  /* ---------- Live scores strip (broadcast game cards) ---------- */
   .scores-strip {
-    display: flex; gap: 12px; overflow-x: auto;
-    padding: 4px 2px 14px; scroll-snap-type: x mandatory;
+    display: flex; gap: 14px; overflow-x: auto;
+    padding: 4px 2px 18px; scroll-snap-type: x mandatory;
   }
+  .scores-strip::-webkit-scrollbar { height: 8px; }
+  .scores-strip::-webkit-scrollbar-thumb { background: var(--bg-elev3); border-radius: 4px; }
   .game-card {
-    flex: 0 0 auto; min-width: 240px;
-    background: var(--card); border-radius: 16px; padding: 12px 14px;
-    box-shadow: var(--shadow); scroll-snap-align: start;
-    border-left: 6px solid var(--bg-3);
+    flex: 0 0 auto; min-width: 320px; max-width: 340px;
+    background: linear-gradient(180deg, var(--bg-elev2), var(--bg-elev1));
+    border: 1px solid var(--line);
+    clip-path: var(--clip-card);
+    padding: 14px 16px;
+    scroll-snap-align: start;
+    position: relative;
+    cursor: pointer;
+    transition: transform .15s ease, border-color .15s ease;
   }
-  .game-card .meta { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-weight: 700; }
-  .game-card .row { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
-  .game-card .team { display: flex; align-items: center; gap: 8px; font-weight: 700; }
-  .game-card .team .dot { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
-  .game-card .score { font-variant-numeric: tabular-nums; font-weight: 800; font-size: 18px; }
-  .game-card.live { border-left-color: var(--bad); }
-  .game-card.final { border-left-color: var(--muted); }
-  .game-card .status { font-size: 11px; padding: 3px 8px; border-radius: 999px; background: #f1eef8; color: var(--ink); display: inline-block; margin-top: 6px; font-weight: 700; }
-  .game-card.live .status { background: #ffe2e8; color: #b80037; animation: pulse 1.6s infinite; }
-  @keyframes pulse { 0%,100%{ opacity: 1 } 50%{ opacity: .6 } }
+  .game-card:hover { transform: translateY(-2px); border-color: var(--line-hot); }
+  .game-card.live { border-left: 3px solid var(--red-hot); }
+  .game-card.final { border-left: 3px solid var(--bg-elev3); }
+  .game-card.scheduled { border-left: 3px solid var(--gold-dim); }
+  .game-card .meta {
+    font-family: var(--mono); font-size: 10px; color: var(--ink-dim);
+    text-transform: uppercase; letter-spacing: .14em; font-weight: 700;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .game-card .meta .stamp { color: var(--gold); }
+  .game-card .row {
+    display: grid; grid-template-columns: 32px 1fr auto;
+    align-items: center; gap: 10px; margin-top: 10px;
+  }
+  .game-card .team-mini-logo {
+    width: 32px; height: 32px; object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,.5));
+  }
+  .game-card .team-name {
+    font-family: var(--display); font-size: 22px; letter-spacing: .03em;
+    text-transform: uppercase; line-height: 1; color: var(--ink);
+  }
+  .game-card .team-rec { font-size: 10px; color: var(--muted); margin-top: 2px;
+    letter-spacing: .04em; }
+  .game-card .score {
+    font-family: var(--mono); font-variant-numeric: tabular-nums;
+    font-weight: 700; font-size: 28px; color: var(--ink);
+    min-width: 40px; text-align: right;
+  }
+  .game-card .row.losing .team-name,
+  .game-card .row.losing .score { color: var(--ink-dim); opacity: .65; }
+  .game-card .status-bar {
+    margin-top: 12px; padding-top: 10px;
+    border-top: 1px dashed var(--line);
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--mono); font-size: 11px; letter-spacing: .06em;
+    color: var(--ink-dim); text-transform: uppercase;
+  }
+  .game-card.live .status-bar .status { color: var(--red-hot); font-weight: 700; }
+  .game-card.live .status-bar .status::before {
+    content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--red-hot); margin-right: 6px;
+    box-shadow: 0 0 8px var(--red-hot); animation: pulse 1.4s infinite;
+  }
+  .game-card .insights {
+    margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line);
+    display: grid; gap: 6px;
+  }
+  .game-card .insight-line {
+    font-size: 11px; color: var(--ink-dim); display: flex; gap: 8px; align-items: flex-start;
+    line-height: 1.35;
+  }
+  .game-card .insight-line .ic {
+    flex: 0 0 auto; width: 16px; text-align: center; color: var(--gold);
+    font-weight: 700;
+  }
+  .game-card .insight-line strong { color: var(--ink); font-weight: 700; }
+  .game-card.expanded { max-width: none; min-width: 360px; }
+
+  /* ---------- Live feed (Reddit + ESPN play-by-play) ---------- */
+  .feed-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  }
+  @media (max-width: 900px) { .feed-grid { grid-template-columns: 1fr; } }
+  .feed-card { padding: 18px 20px 14px; min-height: 200px; }
+  .feed-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .feed-title {
+    font-family: var(--display); font-size: 18px; letter-spacing: .04em;
+    text-transform: uppercase; color: var(--ink);
+  }
+  .feed-tag {
+    font-family: var(--mono); font-size: 10px; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--gold);
+    padding: 3px 8px; border: 1px solid var(--line-hot);
+  }
+  .feed-list { display: flex; flex-direction: column; gap: 10px; max-height: 340px; overflow-y: auto; padding-right: 6px; }
+  .feed-list::-webkit-scrollbar { width: 6px; }
+  .feed-list::-webkit-scrollbar-thumb { background: var(--bg-elev3); border-radius: 3px; }
+  .feed-item {
+    padding: 10px 12px; background: rgba(255,255,255,.02);
+    border-left: 3px solid var(--bg-elev3);
+    font-size: 13px; line-height: 1.4; color: var(--ink-dim);
+  }
+  .feed-item.high { border-left-color: var(--gold); }
+  .feed-item.score { border-left-color: var(--red-hot); }
+  .feed-item .feed-meta {
+    font-family: var(--mono); font-size: 10px; color: var(--muted);
+    letter-spacing: .08em; margin-bottom: 4px; text-transform: uppercase;
+  }
+  .feed-item .feed-meta .pts { color: var(--gold); font-weight: 700; }
+  .feed-item .feed-text strong { color: var(--ink); }
+  .feed-empty { color: var(--muted); font-size: 13px; padding: 20px 4px; text-align: center; font-style: italic; }
+  .pbp-clock { color: var(--gold); font-family: var(--mono); font-weight: 700; }
+  .pbp-score { color: var(--ink); font-family: var(--mono); font-weight: 700; }
+
+  /* Sentiment meter for Reddit */
+  .sentiment {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 12px; padding: 8px 10px;
+    background: rgba(255,255,255,.02); border-left: 3px solid var(--gold);
+  }
+  .sentiment .label {
+    font-family: var(--mono); font-size: 10px; color: var(--ink-dim);
+    text-transform: uppercase; letter-spacing: .12em;
+  }
+  .sentiment .bar { flex: 1; height: 6px; background: var(--bg-elev3); position: relative; overflow: hidden; }
+  .sentiment .bar .fill {
+    position: absolute; top: 0; bottom: 0; left: 50%;
+    transform-origin: left center;
+    background: linear-gradient(90deg, var(--green), var(--gold));
+  }
+  .sentiment .bar .fill.neg {
+    background: linear-gradient(270deg, var(--red), var(--gold));
+    transform-origin: right center;
+    left: auto; right: 50%;
+  }
+  .sentiment .score-num { font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--ink); }
+
+  /* Game selector tabs for the feed */
+  .game-selector { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .game-selector .gs-btn {
+    background: rgba(255,255,255,.03);
+    border: 1px solid var(--line);
+    color: var(--ink-dim); padding: 6px 12px; font-size: 11px; font-weight: 800;
+    letter-spacing: .1em; text-transform: uppercase; cursor: pointer;
+    clip-path: var(--clip-tab); font-family: var(--body);
+  }
+  .game-selector .gs-btn.active {
+    background: var(--gold); color: #000; border-color: var(--gold);
+  }
+  .game-selector .gs-btn.live { border-color: var(--red); color: var(--red-hot); }
+  .game-selector .gs-btn.live.active { background: var(--red); color: #fff; border-color: var(--red); }
 
   /* ---------- Leaderboard ---------- */
-  .grid-2 { display: grid; grid-template-columns: 1.1fr .9fr; gap: 24px; }
+  .grid-2 { display: grid; grid-template-columns: 1.1fr .9fr; gap: 18px; }
   @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
-
-  .card {
-    background: var(--card); border-radius: 20px; box-shadow: var(--shadow);
-    padding: 18px 18px 8px;
-  }
   table.lb { width: 100%; border-collapse: collapse; }
-  table.lb th, table.lb td { padding: 10px 6px; text-align: left; }
-  table.lb th { font-size: 11px; text-transform: uppercase; color: var(--muted); letter-spacing: .08em; border-bottom: 1px solid #eee; }
-  table.lb td { border-bottom: 1px dashed #eee; font-size: 14px; }
+  table.lb th, table.lb td { padding: 11px 6px; text-align: left; }
+  table.lb th {
+    font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+    color: var(--muted); letter-spacing: .14em; border-bottom: 1px solid var(--line);
+    font-weight: 700;
+  }
+  table.lb td { border-bottom: 1px solid var(--line); font-size: 14px; color: var(--ink); }
   table.lb tr:last-child td { border-bottom: none; }
-  table.lb td.rank { font-weight: 800; font-size: 18px; width: 44px; }
-  table.lb td.user { font-weight: 700; }
-  table.lb td.pts { font-variant-numeric: tabular-nums; font-weight: 700; }
-  table.lb td.delta { font-size: 12px; color: var(--muted); }
-  .medal-1 { color: var(--gold); }
-  .medal-2 { color: var(--silver); }
-  .medal-3 { color: var(--bronze); }
+  table.lb tr:hover td { background: rgba(255,184,28,.04); }
+  table.lb td.rank {
+    font-family: var(--display); font-weight: 400; font-size: 24px; width: 50px;
+    color: var(--gold); letter-spacing: .02em;
+  }
+  table.lb td.rank.r1 { color: var(--gold); }
+  table.lb td.rank.r2 { color: var(--silver); }
+  table.lb td.rank.r3 { color: var(--bronze); }
+  table.lb td.user { font-weight: 700; color: var(--ink); }
+  table.lb td.pts { font-family: var(--mono); font-variant-numeric: tabular-nums; font-weight: 700; }
+  table.lb td.poss { color: var(--muted); }
 
   /* ---------- Probability ---------- */
-  .prob-row { display: grid; grid-template-columns: 130px 1fr 60px; align-items: center; gap: 10px; padding: 8px 0; }
-  .prob-row .name { font-weight: 700; font-size: 14px; }
-  .prob-row .bar { height: 14px; background: #f0eef7; border-radius: 999px; overflow: hidden; position: relative; }
-  .prob-row .fill {
-    height: 100%; border-radius: 999px;
-    background: linear-gradient(90deg, var(--bg-3), var(--bg-2));
-    transition: width .6s cubic-bezier(.2,.8,.2,1);
+  .prob-row {
+    display: grid; grid-template-columns: 130px 1fr 60px;
+    align-items: center; gap: 12px; padding: 9px 0;
+    border-bottom: 1px solid var(--line);
   }
-  .prob-row .pct { font-variant-numeric: tabular-nums; font-weight: 800; text-align: right; font-size: 14px; }
+  .prob-row:last-child { border-bottom: none; }
+  .prob-row .name { font-weight: 700; font-size: 13px; color: var(--ink); }
+  .prob-row .bar { height: 10px; background: var(--bg-elev3); position: relative; overflow: hidden; clip-path: polygon(0 0, 100% 0, calc(100% - 4px) 100%, 0 100%); }
+  .prob-row .fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--red), var(--gold));
+    transition: width .6s cubic-bezier(.2,.8,.2,1);
+    box-shadow: 0 0 12px rgba(255,184,28,.35);
+  }
+  .prob-row .pct {
+    font-family: var(--mono); font-variant-numeric: tabular-nums;
+    font-weight: 700; text-align: right; font-size: 13px; color: var(--gold);
+  }
 
-  /* ---------- Brackets ---------- */
-  .user-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; }
+  /* ---------- Bracket section ---------- */
+  .user-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 4px; }
+  .user-tabs::-webkit-scrollbar { height: 6px; }
+  .user-tabs::-webkit-scrollbar-thumb { background: var(--bg-elev3); border-radius: 3px; }
   .user-tab {
     flex: 0 0 auto;
-    background: white; border: 1px solid #e7e3f1; padding: 8px 14px;
-    border-radius: 999px; cursor: pointer; font-weight: 700; font-size: 13px;
-    color: var(--ink);
+    background: rgba(255,255,255,.03);
+    border: 1px solid var(--line);
+    padding: 8px 16px; font-weight: 800; font-size: 11px;
+    letter-spacing: .1em; text-transform: uppercase;
+    color: var(--ink-dim); cursor: pointer;
+    clip-path: var(--clip-tab); font-family: var(--body);
   }
-  .user-tab.active {
-    background: var(--ink); color: white; border-color: var(--ink);
+  .user-tab:hover { color: var(--gold); border-color: var(--line-hot); }
+  .user-tab.active { background: var(--gold); color: #000; border-color: var(--gold); }
+
+  /* Best path callout */
+  .best-path {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 16px;
+    background: linear-gradient(90deg, rgba(255,184,28,.1), transparent);
+    border-left: 3px solid var(--gold);
+    margin-bottom: 14px;
+    font-size: 13px; color: var(--ink);
+  }
+  .best-path .bp-label {
+    font-family: var(--mono); font-size: 10px; color: var(--gold);
+    text-transform: uppercase; letter-spacing: .14em; font-weight: 700;
+    flex: 0 0 auto;
+  }
+  .best-path .bp-text { flex: 1; line-height: 1.45; }
+  .best-path .bp-text strong { color: var(--gold); font-weight: 700; }
+  .best-path .bp-pct {
+    font-family: var(--mono); font-weight: 700; color: var(--gold);
+    flex: 0 0 auto;
   }
 
+  /* Bracket grid */
   .bracket {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 12px;
-    overflow-x: auto;
-    padding-bottom: 8px;
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    gap: 10px; overflow-x: auto; padding-bottom: 8px;
   }
   .bracket.bracket-6col { grid-template-columns: repeat(6, 1fr); }
-  .col-label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 700; }
+  .col-label {
+    font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+    letter-spacing: .14em; color: var(--gold); font-weight: 700;
+    padding-bottom: 6px; border-bottom: 1px solid var(--line);
+    margin-bottom: 8px;
+  }
   .col { display: flex; flex-direction: column; gap: 8px; }
   .col.r1 { gap: 8px; }
   .col.r2 { padding-top: 32px; gap: 64px; }
@@ -170,69 +416,147 @@
     .col.r2, .col.cf, .col.f { padding-top: 0; gap: 8px; }
   }
 
-  /* ---------- Champion card (NBA Finals pick, featured at top) ---------- */
+  /* ---------- Champion card (NBA Finals pick) ---------- */
   .champion-card {
-    position: relative; border-radius: 18px; padding: 18px 22px;
-    color: white; box-shadow: 0 10px 24px rgba(0,0,0,.18);
-    margin-bottom: 18px; overflow: hidden;
+    position: relative; padding: 22px 26px;
+    color: white; margin-bottom: 18px; overflow: hidden;
+    clip-path: var(--clip-card);
+    border: 1px solid var(--line);
   }
-  .champion-card.wrong { opacity: .75; }
+  .champion-card::after {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(400px 200px at 90% 0%, rgba(255,255,255,.18), transparent 60%);
+    pointer-events: none;
+  }
+  .champion-card.wrong { opacity: .7; filter: grayscale(.5); }
   .champion-card.wrong .champion-text { text-decoration: line-through; text-decoration-thickness: 2px; }
-  .champion-card.correct { box-shadow: 0 0 0 3px #10b981, 0 10px 24px rgba(16,185,129,.35); }
+  .champion-card.correct { box-shadow: 0 0 0 2px var(--gold), 0 14px 40px rgba(255,184,28,.4); }
   .champion-label {
-    font-size: 11px; text-transform: uppercase; letter-spacing: .12em;
-    font-weight: 800; opacity: .85; margin-bottom: 8px;
-    text-shadow: 0 1px 2px rgba(0,0,0,.4);
+    font-family: var(--mono); font-size: 11px; text-transform: uppercase;
+    letter-spacing: .18em; font-weight: 700; opacity: .9; margin-bottom: 10px;
+    color: rgba(255,255,255,.95);
   }
-  .champion-body { display: flex; align-items: center; gap: 16px; }
+  .champion-label::before {
+    content: "● "; color: var(--gold);
+  }
+  .champion-body { display: flex; align-items: center; gap: 18px; position: relative; }
   .champion-logo {
-    width: 72px; height: 72px; object-fit: contain; flex: 0 0 72px;
-    background: rgba(255,255,255,.92); border-radius: 12px; padding: 6px;
+    width: 80px; height: 80px; object-fit: contain; flex: 0 0 80px;
+    background: rgba(255,255,255,.95); padding: 8px;
+    clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
   }
-  .champion-text { flex: 1 1 auto; text-shadow: 0 1px 2px rgba(0,0,0,.4); }
-  .champion-team { font-size: 24px; font-weight: 900; letter-spacing: -.02em; }
-  .champion-name { font-weight: 600; opacity: .9; font-size: 18px; }
-  .champion-status { font-size: 13px; font-weight: 600; opacity: .9; margin-top: 2px; }
+  .champion-text { flex: 1 1 auto; text-shadow: 0 2px 6px rgba(0,0,0,.5); }
+  .champion-team {
+    font-family: var(--display); font-size: 36px; font-weight: 400;
+    letter-spacing: .02em; text-transform: uppercase; line-height: 1;
+  }
+  .champion-name {
+    font-family: var(--display); font-weight: 400; opacity: .95;
+    font-size: 26px; text-transform: uppercase; letter-spacing: .03em;
+  }
+  .champion-status {
+    font-size: 12px; font-weight: 700; opacity: .92; margin-top: 8px;
+    letter-spacing: .08em; text-transform: uppercase; font-family: var(--mono);
+  }
+
+  /* Pick cells */
   .pick {
-    display: flex; align-items: center; gap: 8px;
-    padding: 8px 10px; border-radius: 12px; background: #f7f5fb;
-    border-left: 5px solid var(--bg-3); font-weight: 700; font-size: 13px;
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    background: linear-gradient(180deg, var(--bg-elev2), var(--bg-elev1));
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--bg-elev3);
+    font-weight: 700; font-size: 13px; color: var(--ink);
+    clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+    transition: transform .12s ease;
   }
+  .pick:hover { transform: translateX(2px); }
   .pick .team-logo {
-    width: 28px; height: 28px; object-fit: contain; flex: 0 0 28px;
+    width: 30px; height: 30px; object-fit: contain; flex: 0 0 30px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,.5));
   }
   .pick .pick-body { flex: 1 1 auto; min-width: 0; }
-  .pick .pick-pts { font-size: 11px; color: var(--muted); font-weight: 700; flex: 0 0 auto; }
-  .pick.correct { background: #defde6; border-left-color: var(--good); }
-  /* Only strike through the text content, not the logo */
-  .pick.wrong   { background: #ffe1e6; border-left-color: var(--bad); opacity: .85; }
+  .pick .pick-body strong {
+    font-family: var(--display); font-size: 16px; letter-spacing: .03em;
+    text-transform: uppercase; font-weight: 400; color: var(--ink);
+  }
+  .pick .pick-body .city {
+    font-size: 11px; color: var(--muted); font-weight: 600;
+    margin-left: 4px;
+  }
+  .pick .pick-pts {
+    font-family: var(--mono); font-size: 11px; color: var(--gold);
+    font-weight: 700; flex: 0 0 auto; letter-spacing: .04em;
+  }
+  .pick.correct {
+    border-left-color: var(--green);
+    background: linear-gradient(180deg, rgba(24,210,123,.18), var(--bg-elev1));
+  }
+  .pick.correct .pick-body strong { color: var(--green); }
+  .pick.wrong {
+    border-left-color: var(--red);
+    background: linear-gradient(180deg, rgba(220,38,38,.16), var(--bg-elev1));
+    opacity: .8;
+  }
   .pick.wrong .pick-body, .pick.wrong .pick-pts { text-decoration: line-through; }
-  .pick.pending { background: #fff7e0; border-left-color: var(--gold); }
-  .pick .games { font-size: 11px; font-weight: 600; color: var(--muted); }
+  .pick.pending { border-left-color: var(--gold); }
+  .pick .games {
+    font-family: var(--mono); font-size: 10px; font-weight: 600;
+    color: var(--muted); letter-spacing: .04em; text-transform: uppercase;
+    margin-top: 2px;
+  }
 
   /* ---------- Footer / data tools ---------- */
   details.tools {
-    margin-top: 24px; background: white; border-radius: 16px; padding: 14px 18px; box-shadow: var(--shadow);
+    margin-top: 28px; padding: 16px 20px;
+    background: linear-gradient(180deg, var(--bg-elev1), var(--bg-deep));
+    border: 1px solid var(--line); clip-path: var(--clip-card);
   }
-  details.tools summary { cursor: pointer; font-weight: 800; }
+  details.tools summary {
+    cursor: pointer; font-weight: 800; color: var(--ink);
+    font-family: var(--body); letter-spacing: .04em; text-transform: uppercase;
+    font-size: 13px;
+  }
+  details.tools p { color: var(--ink-dim); }
+  details.tools code { color: var(--gold); font-family: var(--mono); font-size: 12px; }
   details.tools textarea {
-    width: 100%; min-height: 240px; font-family: ui-monospace, "SF Mono", Menlo, monospace;
-    font-size: 12px; padding: 12px; border-radius: 12px; border: 1px solid #e7e3f1; margin-top: 10px;
+    width: 100%; min-height: 240px; font-family: var(--mono);
+    font-size: 12px; padding: 12px; background: var(--bg-deep);
+    color: var(--ink); border: 1px solid var(--line); margin-top: 10px;
+    border-radius: 0;
   }
   details.tools .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
   button.btn {
-    background: var(--ink); color: white; border: none; padding: 10px 14px;
-    border-radius: 12px; font-weight: 700; cursor: pointer;
+    background: var(--gold); color: #000; border: none; padding: 10px 16px;
+    font-weight: 800; cursor: pointer; letter-spacing: .08em; text-transform: uppercase;
+    font-size: 12px; clip-path: var(--clip-tab); font-family: var(--body);
   }
-  button.btn.ghost { background: transparent; color: var(--ink); border: 1px solid #e7e3f1; }
+  button.btn:hover { background: #ffc83d; }
+  button.btn.ghost {
+    background: transparent; color: var(--ink-dim);
+    border: 1px solid var(--line);
+  }
+  button.btn.ghost:hover { color: var(--gold); border-color: var(--line-hot); }
   .toast {
-    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-    background: var(--ink); color: white; padding: 12px 18px; border-radius: 12px;
-    font-weight: 700; font-size: 13px; opacity: 0; transition: opacity .3s;
-    pointer-events: none; z-index: 50;
+    position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+    background: var(--gold); color: #000; padding: 12px 22px;
+    font-weight: 800; font-size: 12px; opacity: 0; transition: opacity .3s;
+    pointer-events: none; z-index: 50; letter-spacing: .08em; text-transform: uppercase;
+    clip-path: var(--clip-tab);
   }
   .toast.show { opacity: 1; }
-  footer { margin: 32px 0 12px; text-align: center; color: var(--muted); font-size: 12px; }
+  footer {
+    margin: 36px 0 12px; text-align: center; color: var(--muted);
+    font-family: var(--mono); font-size: 11px; letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  /* Animations */
+  @keyframes pulse { 0%,100%{ opacity: 1 } 50%{ opacity: .35 } }
+  @keyframes shimmer {
+    0% { background-position: -200px 0; }
+    100% { background-position: 200px 0; }
+  }
 </style>
 </head>
 <body>
@@ -241,49 +565,74 @@
   <header class="hero">
     <div class="hero-row">
       <div>
-        <h1><span class="emoji">🏀</span> Bracket Brawl <span class="emoji">🔥</span></h1>
+        <h1>Bracket <span class="slash">/</span> <span class="accent">Brawl</span></h1>
         <p class="tag" id="group-tag">Loading group…</p>
       </div>
       <div class="links">
-        <a class="pill" id="espn-link" href="#" target="_blank" rel="noopener">View on ESPN ↗</a>
-        <a class="pill" href="#tools">Edit data ⚙︎</a>
-        <span class="pill" id="sync-indicator" title="Auto-syncs from ESPN every 5 minutes">🔄 Syncing…</span>
+        <a class="pill" id="espn-link" href="#" target="_blank" rel="noopener">View on ESPN</a>
+        <a class="pill" href="#tools">Edit Data</a>
+        <span class="pill" id="sync-indicator" title="Auto-syncs from ESPN every 5 minutes">Syncing…</span>
         <span class="pill" id="last-updated">Updated —</span>
       </div>
     </div>
   </header>
 
   <section>
-    <h2 class="section">📺 Today on the hardwood <span class="badge" id="games-count">0</span></h2>
+    <h2 class="section">On the Floor <span class="badge" id="games-count">0</span><span class="sub" id="scores-sub">Tap a game for the live feed</span></h2>
     <div id="scores" class="scores-strip">
       <div class="game-card"><div class="meta">Loading…</div></div>
     </div>
   </section>
 
+  <section id="live-feed-section" style="display:none">
+    <h2 class="section">Live Feed <span class="badge" id="feed-game-label">—</span><span class="sub" id="feed-sub">Crowd reaction · Play-by-play</span></h2>
+    <div class="game-selector" id="feed-selector"></div>
+    <div class="feed-grid">
+      <div class="card feed-card">
+        <div class="feed-head">
+          <div class="feed-title">r/nba Game Thread</div>
+          <div class="feed-tag" id="reddit-tag">Reddit</div>
+        </div>
+        <div id="reddit-sentiment"></div>
+        <div class="feed-list" id="reddit-feed">
+          <div class="feed-empty">Pick a game above to load Reddit reactions.</div>
+        </div>
+      </div>
+      <div class="card feed-card">
+        <div class="feed-head">
+          <div class="feed-title">Play-by-Play</div>
+          <div class="feed-tag" id="pbp-tag">ESPN</div>
+        </div>
+        <div class="feed-list" id="pbp-feed">
+          <div class="feed-empty">Pick a game above to load play-by-play.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="grid-2">
     <div class="card">
-      <h2 class="section">🏆 Leaderboard</h2>
+      <h2 class="section">Leaderboard</h2>
       <table class="lb">
         <thead>
           <tr>
-            <th>#</th><th>Player</th><th>Points</th><th>Possible</th><th>Correct</th>
+            <th>#</th><th>Player</th><th>Pts</th><th>Possible</th><th>Correct</th>
           </tr>
         </thead>
         <tbody id="leaderboard"></tbody>
       </table>
     </div>
     <div class="card">
-      <h2 class="section">🎲 Win probability</h2>
+      <h2 class="section">Title Odds</h2>
       <div id="prob"></div>
-      <p style="font-size:12px;color:var(--muted);margin:8px 4px 12px">
-        Monte Carlo over <span id="sim-n">10,000</span> simulations of the remaining games.
-        Series favorites are inferred from seeding (see "Edit data" to tune).
+      <p style="font-size:11px;color:var(--muted);margin:10px 4px 12px;font-family:var(--mono);letter-spacing:.04em">
+        MONTE CARLO · <span id="sim-n">10,000</span> SIMS · Seed-based per-series probabilities
       </p>
     </div>
   </section>
 
   <section>
-    <h2 class="section">🗺️ Picks vs. reality</h2>
+    <h2 class="section">Picks vs. Reality</h2>
     <div class="user-tabs" id="user-tabs"></div>
     <div class="card" style="margin-top:10px;">
       <div id="bracket-host"></div>
@@ -500,6 +849,9 @@ const DEFAULT_DATA = {
    ========================================================================= */
 let DATA = null;
 let activeUserIdx = 0;
+let LATEST_SIM = null;       // cached Monte Carlo results (for best-path callout)
+let LIVE_GAMES_CACHE = [];   // cached events from latest scoreboard fetch
+let activeFeedGameId = null; // ESPN event id selected for the live feed
 
 function isValidData(d) {
   return d && Array.isArray(d.users) && Array.isArray(d.series) && d.scoring && typeof d.groupId === "string";
@@ -648,6 +1000,8 @@ function probReachFirst(winsA, winsB, pA) {
 function runSimulations(N) {
   const wins = DATA.users.map(() => 0);
   const totalPoints = DATA.users.map(() => 0);
+  // Track winning paths per user — series-id → team → count (only sims they win)
+  const winPaths = DATA.users.map(() => ({ FIN: {}, WCF: {}, ECF: {}, "WR2-1": {}, "WR2-2": {}, "ER2-1": {}, "ER2-2": {} }));
   // Cache per-series probabilities for "from-scratch" sim of empty future series
   for (let i = 0; i < N; i++) {
     // Clone series with simulated winners
@@ -705,12 +1059,36 @@ function runSimulations(N) {
     }
     wins[winnerIdx]++;
     scores.forEach((p, idx) => totalPoints[idx] += p);
+    // Capture this sim's path for the winning user (so we know what scenario led them to win)
+    const wp = winPaths[winnerIdx];
+    for (const sid of Object.keys(wp)) {
+      const s = simSeries.find(x => x.id === sid);
+      if (s && s.winner) {
+        wp[sid][s.winner] = (wp[sid][s.winner] || 0) + 1;
+      }
+    }
   }
-  return DATA.users.map((u, idx) => ({
-    name: u.name,
-    pWin: wins[idx] / N,
-    expectedPoints: totalPoints[idx] / N,
-  }));
+  return DATA.users.map((u, idx) => {
+    // Find each user's most-common path
+    const wp = winPaths[idx];
+    const totalWins = wins[idx];
+    const topInSeries = (sid) => {
+      const tally = wp[sid] || {};
+      const entries = Object.entries(tally).sort((a,b) => b[1] - a[1]);
+      if (!entries.length) return null;
+      return { team: entries[0][0], frac: entries[0][1] / Math.max(1, totalWins) };
+    };
+    return {
+      name: u.name,
+      pWin: wins[idx] / N,
+      expectedPoints: totalPoints[idx] / N,
+      bestPath: totalWins > 0 ? {
+        FIN: topInSeries("FIN"),
+        WCF: topInSeries("WCF"),
+        ECF: topInSeries("ECF"),
+      } : null,
+    };
+  });
 }
 // pSeriesAWin during sim — handles fact that simulated series may have just had their teams set
 function pSeriesAWinSim(s) {
@@ -752,14 +1130,14 @@ function renderLeaderboard() {
   const body = document.getElementById("leaderboard");
   body.innerHTML = rows.map((r, i) => {
     const rank = i + 1;
-    const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : "";
     const possible = maxPossiblePoints(r.name);
+    const rankCls = rank === 1 ? "rank r1" : rank === 2 ? "rank r2" : rank === 3 ? "rank r3" : "rank";
     return `
       <tr>
-        <td class="rank">${medal || rank}</td>
+        <td class="${rankCls}">${rank}</td>
         <td class="user">${escapeHTML(r.name)}</td>
         <td class="pts">${r.earned}</td>
-        <td class="pts" style="color:var(--muted)">${possible}</td>
+        <td class="pts poss">${possible}</td>
         <td class="pts">${r.correct}/${DATA.series.length}</td>
       </tr>`;
   }).join("");
@@ -810,9 +1188,12 @@ function renderProbability() {
   const N = 10000;
   document.getElementById("sim-n").textContent = N.toLocaleString();
   const results = runSimulations(N);
-  results.sort((a, b) => b.pWin - a.pWin);
+  // Cache by user name so the bracket "best path" callout can read it back
+  LATEST_SIM = {};
+  for (const r of results) LATEST_SIM[r.name] = r;
+  const sorted = [...results].sort((a, b) => b.pWin - a.pWin);
   const host = document.getElementById("prob");
-  host.innerHTML = results.map(r => {
+  host.innerHTML = sorted.map(r => {
     const pct = (r.pWin * 100).toFixed(1);
     return `
       <div class="prob-row">
@@ -854,6 +1235,7 @@ function renderBracket() {
     { label: "East R1", ids: eR1, cls: "r1" },
   ];
   host.innerHTML = `
+    ${renderBestPath(u)}
     ${renderChampionCard(u)}
     <div class="bracket bracket-6col">
       ${cols.map(c => `
@@ -864,6 +1246,35 @@ function renderBracket() {
           </div>
         </div>
       `).join("")}
+    </div>
+  `;
+}
+
+function renderBestPath(u) {
+  const sim = LATEST_SIM && LATEST_SIM[u.name];
+  if (!sim) return "";
+  if (!sim.bestPath || sim.pWin < 0.0001) {
+    return `
+      <div class="best-path">
+        <div class="bp-label">Path</div>
+        <div class="bp-text">No realistic title path remains in the simulator. ${sim.pWin === 0 ? "All championship picks are eliminated." : "Long-shot scenarios only."}</div>
+        <div class="bp-pct">${(sim.pWin*100).toFixed(1)}%</div>
+      </div>
+    `;
+  }
+  const fin = sim.bestPath.FIN;
+  const wcf = sim.bestPath.WCF;
+  const ecf = sim.bestPath.ECF;
+  const parts = [];
+  if (fin) parts.push(`<strong>${escapeHTML(teamName(fin.team))}</strong> wins it all`);
+  if (wcf) parts.push(`<strong>${escapeHTML(teamName(wcf.team))}</strong> in the WCF`);
+  if (ecf) parts.push(`<strong>${escapeHTML(teamName(ecf.team))}</strong> in the ECF`);
+  const txt = parts.length ? parts.join(" · ") : "Mixed scenarios — no single dominant path.";
+  return `
+    <div class="best-path">
+      <div class="bp-label">Best Path</div>
+      <div class="bp-text">${txt}</div>
+      <div class="bp-pct">${(sim.pWin*100).toFixed(1)}%</div>
     </div>
   `;
 }
@@ -919,10 +1330,10 @@ function renderPickCell(u, sid) {
     <div class="pick ${cls}" style="border-left-color:${color}">
       ${logoHTML}
       <div class="pick-body">
-        <div><strong>${escapeHTML(pick)}</strong> <span style="opacity:.6;font-weight:600">${escapeHTML(teamName(pick))}</span></div>
-        <div class="games">${subtitle}${games ? ` • guessed ${games}g` : ""}</div>
+        <div><strong>${escapeHTML(pick)}</strong><span class="city">${escapeHTML(teamName(pick))}</span></div>
+        <div class="games">${subtitle}${games ? ` · ${games}G` : ""}</div>
       </div>
-      <div class="pick-pts">${DATA.scoring[s.round]}p</div>
+      <div class="pick-pts">${DATA.scoring[s.round]}P</div>
     </div>
   `;
 }
@@ -946,20 +1357,61 @@ async function loadLiveScores() {
       const t = e.season && e.season.type;
       return t === 3 || t === undefined; // be permissive
     });
+    LIVE_GAMES_CACHE = events;
     renderScores(events);
+    renderFeedSelector(events);
   } catch (e) {
     console.warn("Live scores failed:", e);
     document.getElementById("scores").innerHTML =
       `<div class="game-card"><div class="meta">Couldn't reach ESPN scoreboard</div>
-       <div class="row"><div>${escapeHTML(e.message)}</div></div></div>`;
+       <div class="status-bar"><div>${escapeHTML(e.message)}</div></div></div>`;
     document.getElementById("games-count").textContent = "0";
   }
 }
+
+// Pick a few human-readable "insight" lines per game from ESPN's payload.
+function buildInsights(ev, c, home, away) {
+  const out = [];
+  const series = (c.series && c.series.summary) || "";
+  // Series state
+  if (series) out.push({ ic: "▶", text: `<strong>${escapeHTML(series)}</strong>` });
+  // Team records (regular-season records ride along on competitor.records)
+  const recs = [];
+  for (const tm of [away, home]) {
+    const ab = (tm.team && tm.team.abbreviation) || "";
+    const r = (tm.records && tm.records[0] && tm.records[0].summary) || tm.record;
+    if (ab && r) recs.push(`${ab} ${r}`);
+  }
+  if (recs.length) out.push({ ic: "◆", text: recs.join(" · ") });
+  // Top performer this game (if mid-game / final)
+  const leadersFor = (cp) => {
+    if (!cp.leaders || !cp.leaders.length) return null;
+    // Prefer rating > points
+    const cat = cp.leaders.find(l => l.name === "rating") || cp.leaders.find(l => l.name === "points") || cp.leaders[0];
+    const ldr = cat && cat.leaders && cat.leaders[0];
+    if (!ldr) return null;
+    const ab = (cp.team && cp.team.abbreviation) || "";
+    const name = (ldr.athlete && (ldr.athlete.shortName || ldr.athlete.displayName)) || "";
+    const stat = ldr.displayValue || "";
+    return name ? `${ab} ${name} — ${stat}` : null;
+  };
+  const aL = leadersFor(away), hL = leadersFor(home);
+  if (aL) out.push({ ic: "★", text: aL });
+  if (hL) out.push({ ic: "★", text: hL });
+  // Headlines (e.g., injuries, storylines) ride along on competition.notes
+  const notes = (c.notes || []).map(n => n.headline || n.note || "").filter(Boolean);
+  if (notes.length) out.push({ ic: "ℹ", text: escapeHTML(notes[0]) });
+  // Broadcast network (TNT, ESPN, ABC) for fun
+  const tv = ((c.broadcasts && c.broadcasts[0] && c.broadcasts[0].names) || []).join(", ");
+  if (tv) out.push({ ic: "📺", text: tv });
+  return out.slice(0, 4);
+}
+
 function renderScores(events) {
   const host = document.getElementById("scores");
   document.getElementById("games-count").textContent = events.length;
   if (!events.length) {
-    host.innerHTML = `<div class="game-card"><div class="meta">No games scheduled today</div></div>`;
+    host.innerHTML = `<div class="game-card scheduled"><div class="meta">No playoff games today</div><div class="status-bar"><div>Check back tomorrow</div></div></div>`;
     return;
   }
   host.innerHTML = events.map(ev => {
@@ -970,26 +1422,238 @@ function renderScores(events) {
     const status = (ev.status && ev.status.type) || {};
     const isLive = status.state === "in";
     const isFinal = status.state === "post";
-    const cls = isLive ? "live" : (isFinal ? "final" : "");
+    const cls = isLive ? "live" : (isFinal ? "final" : "scheduled");
     const detail = status.shortDetail || status.detail || "";
-    const series = (c.series && c.series.summary) || "";
-    const homeAbbr = (home.team && home.team.abbreviation) || "?";
-    const awayAbbr = (away.team && away.team.abbreviation) || "?";
+    const homeAbbr = normalizeESPNAbbr((home.team && home.team.abbreviation) || "");
+    const awayAbbr = normalizeESPNAbbr((away.team && away.team.abbreviation) || "");
+    const homeScore = parseInt(home.score, 10) || 0;
+    const awayScore = parseInt(away.score, 10) || 0;
+    const homeWin = (isLive || isFinal) && homeScore > awayScore;
+    const awayWin = (isLive || isFinal) && awayScore > homeScore;
+    const homeRec = (home.records && home.records[0] && home.records[0].summary) || "";
+    const awayRec = (away.records && away.records[0] && away.records[0].summary) || "";
+    const insights = buildInsights(ev, c, home, away);
+    const insightHTML = insights.length ? `
+      <div class="insights">
+        ${insights.map(i => `<div class="insight-line"><span class="ic">${i.ic}</span><span>${i.text}</span></div>`).join("")}
+      </div>` : "";
+    const stamp = ev.date ? new Date(ev.date).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "";
     return `
-      <div class="game-card ${cls}">
-        <div class="meta">${escapeHTML(series || "Playoffs")}</div>
-        <div class="row">
-          <div class="team"><span class="dot" style="background:${teamColor(awayAbbr)}"></span> ${escapeHTML(awayAbbr)}</div>
-          <div class="score">${escapeHTML(away.score || "0")}</div>
+      <div class="game-card ${cls}" data-event-id="${escapeHTML(ev.id || "")}" onclick="selectFeedGame('${escapeHTML(ev.id || "")}')">
+        <div class="meta">
+          <span>${escapeHTML(((c.series && c.series.summary) || "Playoffs").toUpperCase())}</span>
+          <span class="stamp">${escapeHTML(isLive ? "LIVE" : isFinal ? "FINAL" : stamp)}</span>
         </div>
-        <div class="row">
-          <div class="team"><span class="dot" style="background:${teamColor(homeAbbr)}"></span> ${escapeHTML(homeAbbr)}</div>
-          <div class="score">${escapeHTML(home.score || "0")}</div>
+        <div class="row ${(isLive||isFinal) && !awayWin ? 'losing' : ''}">
+          <img class="team-mini-logo" src="${teamLogo(awayAbbr)}" alt="" onerror="this.style.visibility='hidden'">
+          <div>
+            <div class="team-name">${escapeHTML(awayAbbr || "?")}</div>
+            ${awayRec ? `<div class="team-rec">${escapeHTML(awayRec)}</div>` : ""}
+          </div>
+          <div class="score">${awayScore}</div>
         </div>
-        <div class="status">${escapeHTML(detail)}</div>
+        <div class="row ${(isLive||isFinal) && !homeWin ? 'losing' : ''}">
+          <img class="team-mini-logo" src="${teamLogo(homeAbbr)}" alt="" onerror="this.style.visibility='hidden'">
+          <div>
+            <div class="team-name">${escapeHTML(homeAbbr || "?")}</div>
+            ${homeRec ? `<div class="team-rec">${escapeHTML(homeRec)}</div>` : ""}
+          </div>
+          <div class="score">${homeScore}</div>
+        </div>
+        <div class="status-bar">
+          <span class="status">${escapeHTML(detail)}</span>
+          ${isLive ? '<span style="color:var(--gold)">Tap for live feed →</span>' : ""}
+        </div>
+        ${insightHTML}
       </div>
     `;
   }).join("");
+}
+
+/* =========================================================================
+   8B. LIVE FEED — game selector + Reddit r/nba thread + ESPN play-by-play
+   ========================================================================= */
+function renderFeedSelector(events) {
+  const sec = document.getElementById("live-feed-section");
+  const sel = document.getElementById("feed-selector");
+  if (!events.length) { sec.style.display = "none"; return; }
+  sec.style.display = "";
+  // Order: live first, then upcoming, then final
+  const ordered = [...events].sort((a, b) => {
+    const sa = (a.status && a.status.type && a.status.type.state) || "";
+    const sb = (b.status && b.status.type && b.status.type.state) || "";
+    const rank = s => s === "in" ? 0 : s === "pre" ? 1 : 2;
+    return rank(sa) - rank(sb);
+  });
+  sel.innerHTML = ordered.map(ev => {
+    const c = (ev.competitions && ev.competitions[0]) || {};
+    const comps = c.competitors || [];
+    const home = comps.find(x => x.homeAway === "home") || comps[0] || {};
+    const away = comps.find(x => x.homeAway === "away") || comps[1] || {};
+    const homeAbbr = normalizeESPNAbbr((home.team && home.team.abbreviation) || "?");
+    const awayAbbr = normalizeESPNAbbr((away.team && away.team.abbreviation) || "?");
+    const isLive = (ev.status && ev.status.type && ev.status.type.state === "in");
+    const isActive = ev.id === activeFeedGameId;
+    return `<button class="gs-btn ${isLive ? 'live' : ''} ${isActive ? 'active' : ''}" onclick="selectFeedGame('${escapeHTML(ev.id)}')">${escapeHTML(awayAbbr)} @ ${escapeHTML(homeAbbr)}${isLive ? ' · LIVE' : ''}</button>`;
+  }).join("");
+  // Auto-select the first live game on first render
+  if (!activeFeedGameId) {
+    const liveEv = ordered.find(e => e.status && e.status.type && e.status.type.state === "in") || ordered[0];
+    if (liveEv) selectFeedGame(liveEv.id);
+  }
+}
+
+function selectFeedGame(eventId) {
+  if (!eventId) return;
+  activeFeedGameId = eventId;
+  const ev = LIVE_GAMES_CACHE.find(e => e.id === eventId);
+  if (!ev) return;
+  const c = (ev.competitions && ev.competitions[0]) || {};
+  const comps = c.competitors || [];
+  const home = comps.find(x => x.homeAway === "home") || comps[0] || {};
+  const away = comps.find(x => x.homeAway === "away") || comps[1] || {};
+  const homeAbbr = normalizeESPNAbbr((home.team && home.team.abbreviation) || "?");
+  const awayAbbr = normalizeESPNAbbr((away.team && away.team.abbreviation) || "?");
+  document.getElementById("feed-game-label").textContent = `${awayAbbr} @ ${homeAbbr}`;
+  // Re-render selector to update active state
+  renderFeedSelector(LIVE_GAMES_CACHE);
+  // Kick off both feeds in parallel
+  loadRedditFeed(awayAbbr, homeAbbr);
+  loadPlayByPlayFeed(eventId);
+}
+window.selectFeedGame = selectFeedGame;
+
+/* ----- Reddit r/nba game thread + sentiment ----- */
+const POS_WORDS = ["amazing","goat","unstoppable","cooking","fire","lock","dominant","poster","clutch","mvp","beautiful","masterpiece","insane","love","carrying","let's go","lets go","🔥","👑","🐐","💯"];
+const NEG_WORDS = ["awful","terrible","trash","ass","horrible","choke","choking","dogshit","collapse","disaster","bum","cheating","ref","reffing","robbed","wtf","embarrassing","yikes","cooked","💩","😭"];
+
+function scoreSentiment(text) {
+  if (!text) return 0;
+  const lower = text.toLowerCase();
+  let s = 0;
+  for (const w of POS_WORDS) if (lower.includes(w)) s += 1;
+  for (const w of NEG_WORDS) if (lower.includes(w)) s -= 1;
+  return s;
+}
+
+async function loadRedditFeed(awayAbbr, homeAbbr) {
+  const list = document.getElementById("reddit-feed");
+  const sentBox = document.getElementById("reddit-sentiment");
+  list.innerHTML = `<div class="feed-empty">Searching r/nba for the game thread…</div>`;
+  sentBox.innerHTML = "";
+  try {
+    // Reddit JSON search — find a recent game thread mentioning both team abbreviations
+    const searchUrl = `https://www.reddit.com/r/nba/search.json?q=flair%3A%22Game+Thread%22&restrict_sr=1&sort=new&limit=25&t=day`;
+    const r = await fetch(searchUrl);
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const j = await r.json();
+    const posts = ((j.data && j.data.children) || []).map(c => c.data);
+    // Match by team city / nickname tokens
+    const tokens = [awayAbbr, homeAbbr, teamName(awayAbbr), teamName(homeAbbr), TEAMS[awayAbbr] && TEAMS[awayAbbr].city, TEAMS[homeAbbr] && TEAMS[homeAbbr].city]
+      .filter(Boolean).map(t => t.toLowerCase());
+    const post = posts.find(p => {
+      const t = (p.title || "").toLowerCase();
+      let hits = 0;
+      for (const tk of tokens) if (t.includes(tk.toLowerCase())) hits++;
+      return hits >= 2;
+    }) || posts[0];
+    if (!post) {
+      list.innerHTML = `<div class="feed-empty">No active r/nba game thread found.</div>`;
+      return;
+    }
+    // Fetch top comments
+    const cUrl = `https://www.reddit.com/comments/${post.id}.json?limit=50&sort=top`;
+    const cr = await fetch(cUrl);
+    const cj = await cr.json();
+    const raw = ((cj[1] && cj[1].data && cj[1].data.children) || []).map(c => c.data);
+    const comments = raw.filter(c => c.body && !c.stickied).slice(0, 18);
+    if (!comments.length) {
+      list.innerHTML = `<div class="feed-empty">Game thread found, but no comments yet.</div>`;
+      return;
+    }
+    // Sentiment aggregate
+    let pos = 0, neg = 0;
+    for (const c of comments) {
+      const s = scoreSentiment(c.body);
+      if (s > 0) pos += s;
+      else if (s < 0) neg += -s;
+    }
+    const total = pos + neg || 1;
+    const posPct = (pos / total) * 100;
+    const negPct = (neg / total) * 100;
+    const net = pos - neg;
+    sentBox.innerHTML = `
+      <div class="sentiment">
+        <span class="label">Crowd</span>
+        <div class="bar">
+          <div class="fill neg" style="width:${negPct/2}%"></div>
+          <div class="fill" style="width:${posPct/2}%"></div>
+        </div>
+        <span class="score-num">${net >= 0 ? '+' : ''}${net}</span>
+      </div>
+    `;
+    list.innerHTML = comments.map(c => {
+      const s = scoreSentiment(c.body);
+      const cls = c.score > 50 ? "high" : "";
+      const body = (c.body || "").replace(/\n+/g, " ").slice(0, 240);
+      const sent = s > 0 ? "🔥" : s < 0 ? "❄️" : "·";
+      return `
+        <div class="feed-item ${cls}">
+          <div class="feed-meta">
+            <span class="pts">▲ ${c.score || 0}</span> · ${escapeHTML(c.author || "anon")} · ${sent}
+          </div>
+          <div class="feed-text">${escapeHTML(body)}</div>
+        </div>
+      `;
+    }).join("");
+  } catch (e) {
+    list.innerHTML = `<div class="feed-empty">Reddit feed unavailable: ${escapeHTML(e.message)}</div>`;
+  }
+}
+
+/* ----- ESPN play-by-play ----- */
+async function loadPlayByPlayFeed(eventId) {
+  const list = document.getElementById("pbp-feed");
+  list.innerHTML = `<div class="feed-empty">Loading play-by-play…</div>`;
+  try {
+    const url = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${encodeURIComponent(eventId)}`;
+    const r = await fetch(url);
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const j = await r.json();
+    // ESPN summary surfaces plays as either j.plays (array) or under j.drives. Use plays + lastPlay.
+    const plays = j.plays || [];
+    const status = (j.header && j.header.competitions && j.header.competitions[0] && j.header.competitions[0].status) || {};
+    const isLive = status.type && status.type.state === "in";
+    if (!plays.length) {
+      // Fallback: just show top scoring plays from boxscore players
+      list.innerHTML = `<div class="feed-empty">${isLive ? "Play-by-play not available yet — check back in a moment." : "Play-by-play loads when the game is live."}</div>`;
+      return;
+    }
+    // Most recent N plays, prefer scoring plays
+    const recent = [...plays].reverse().slice(0, 14);
+    list.innerHTML = recent.map(p => {
+      const clock = (p.clock && p.clock.displayValue) || "";
+      const period = p.period && p.period.number;
+      const text = p.text || p.shortText || "";
+      const aw = p.awayScore != null ? p.awayScore : "";
+      const hm = p.homeScore != null ? p.homeScore : "";
+      const isScore = p.scoringPlay;
+      const cls = isScore ? "score" : "";
+      const periodLabel = period ? `Q${period}` : "";
+      return `
+        <div class="feed-item ${cls}">
+          <div class="feed-meta">
+            <span class="pbp-clock">${escapeHTML(periodLabel)} ${escapeHTML(clock)}</span>
+            ${(aw !== "" && hm !== "") ? `· <span class="pbp-score">${aw}–${hm}</span>` : ""}
+            ${isScore ? "· ●" : ""}
+          </div>
+          <div class="feed-text">${escapeHTML(text)}</div>
+        </div>
+      `;
+    }).join("");
+  } catch (e) {
+    list.innerHTML = `<div class="feed-empty">Play-by-play unavailable: ${escapeHTML(e.message)}</div>`;
+  }
 }
 
 /* =========================================================================
@@ -1283,6 +1947,21 @@ loadLiveScores();
 setInterval(loadLiveScores, 60000); // refresh scores every minute
 syncPlayoffSeriesFromESPN();
 setInterval(syncPlayoffSeriesFromESPN, 5 * 60000); // re-sync every 5 min
+// Refresh live feed (Reddit + PBP) every 45s when a game is selected and is live
+setInterval(() => {
+  if (!activeFeedGameId) return;
+  const ev = LIVE_GAMES_CACHE.find(e => e.id === activeFeedGameId);
+  const isLive = ev && ev.status && ev.status.type && ev.status.type.state === "in";
+  if (!isLive) return;
+  const c = (ev.competitions && ev.competitions[0]) || {};
+  const comps = c.competitors || [];
+  const home = comps.find(x => x.homeAway === "home") || comps[0] || {};
+  const away = comps.find(x => x.homeAway === "away") || comps[1] || {};
+  const homeAbbr = normalizeESPNAbbr((home.team && home.team.abbreviation) || "?");
+  const awayAbbr = normalizeESPNAbbr((away.team && away.team.abbreviation) || "?");
+  loadRedditFeed(awayAbbr, homeAbbr);
+  loadPlayByPlayFeed(activeFeedGameId);
+}, 45000);
 </script>
 </body>
 </html>
