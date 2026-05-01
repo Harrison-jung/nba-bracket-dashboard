@@ -1551,18 +1551,25 @@ async function fetchJSONviaProxy(url) {
   for (const proxify of REDDIT_PROXIES) {
     try {
       const r = await fetch(proxify(url), { headers: { "Accept": "application/json" } });
-      if (!r.ok) { lastErr = new Error("HTTP " + r.status); continue; }
       const text = await r.text();
-      // allorigins.win sometimes wraps JSON in {contents:"..."} — handle both shapes
-      try { return JSON.parse(text); }
+      // Try to parse as JSON regardless — our Netlify Function returns structured
+      // JSON errors with HTTP 502 that are still useful to surface.
+      let parsed = null;
+      try { parsed = JSON.parse(text); }
       catch {
+        // allorigins.win sometimes wraps JSON in {contents:"..."}
         try {
           const wrapped = JSON.parse(text);
-          if (wrapped && typeof wrapped.contents === "string") return JSON.parse(wrapped.contents);
+          if (wrapped && typeof wrapped.contents === "string") parsed = JSON.parse(wrapped.contents);
         } catch {}
-        lastErr = new Error("Bad JSON from proxy");
+      }
+      if (parsed && parsed.error) {
+        lastErr = new Error(parsed.error + (parsed.bodyPreview ? ` — ${parsed.bodyPreview.slice(0, 120)}` : ""));
         continue;
       }
+      if (!r.ok) { lastErr = new Error("HTTP " + r.status); continue; }
+      if (parsed) return parsed;
+      lastErr = new Error("Bad JSON from proxy");
     } catch (e) { lastErr = e; }
   }
   throw lastErr || new Error("All Reddit proxies failed");
