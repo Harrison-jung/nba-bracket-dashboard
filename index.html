@@ -321,6 +321,27 @@
   .odds-kind.live { background: var(--red); color: #fff; }
   .odds-kind.open { background: rgba(255,184,28,0.15); color: var(--gold); border: 1px solid rgba(255,184,28,0.4); }
   .odds-stamp { color: var(--gold); animation: oddsPulse 0.8s ease-out; }
+  .kalshi-block {
+    border: 1px solid rgba(34,197,94,0.35);
+    background: linear-gradient(180deg, rgba(34,197,94,0.08), rgba(34,197,94,0.02));
+    padding: 10px 12px; margin-bottom: 10px;
+    clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  }
+  .kalshi-head {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+    font: 10px/1 var(--font-mono); letter-spacing: 0.08em; color: var(--ink-dim);
+  }
+  .kalshi-badge {
+    background: #22c55e; color: #000; font-weight: 800;
+    padding: 3px 7px; border-radius: 2px;
+  }
+  .kalshi-source { color: var(--ink-dim); }
+  .kalshi-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .kp { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: rgba(0,0,0,0.25); }
+  .kp.fav { background: rgba(34,197,94,0.18); border-left: 3px solid #22c55e; }
+  .kp img { width: 22px; height: 22px; }
+  .kp-team { font: 700 14px var(--font-display); letter-spacing: 0.06em; flex: 1; }
+  .kp-prob { font: 700 18px var(--font-mono); color: #22c55e; }
   @keyframes oddsPulse {
     0%   { color: #fff; text-shadow: 0 0 8px var(--gold); }
     100% { color: var(--gold); text-shadow: none; }
@@ -1668,6 +1689,7 @@ async function loadOddsBoard(eventId) {
 
     host.innerHTML = `
       <div class="odds-board">
+        <div id="kalshi-prob"></div>
         <div class="odds-row head">
           <div></div>
           <div>Spread</div>
@@ -1705,9 +1727,70 @@ async function loadOddsBoard(eventId) {
     // Update the panel tag with the book name
     const tag = document.getElementById("odds-tag");
     if (tag) tag.textContent = (primary.provider && primary.provider.name) || "Vegas";
+
+    // Kick off Kalshi (live, moving win-prob) in parallel — don't block ESPN render
+    loadKalshiProb(homeAbbr, awayAbbr);
   } catch (e) {
     host.innerHTML = `<div class="feed-empty">Odds unavailable: ${escapeHTML(e.message)}</div>`;
   }
+}
+
+/* ----- Kalshi live win-probability (via our Netlify proxy) ----- */
+async function loadKalshiProb(homeAbbr, awayAbbr) {
+  const slot = document.getElementById("kalshi-prob");
+  if (!slot) return;
+  try {
+    const url = `/.netlify/functions/odds?home=${encodeURIComponent(homeAbbr)}&away=${encodeURIComponent(awayAbbr)}&_=${Date.now()}`;
+    const r = await fetch(url, { cache: "no-store" });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const j = await r.json();
+    window.__lastKalshi = j; // for console debug
+    console.log(`[kalshi] match=${!!j.match}, ${j.debug?.totalNbaMarkets || 0} NBA markets, ${j.debug?.gameMarketsFound || 0} for this game`);
+
+    if (!j.match || (!j.match.homeMarket && !j.match.awayMarket)) {
+      slot.innerHTML = ""; // silently hide if no Kalshi market for this game
+      return;
+    }
+    const hm = j.match.homeMarket;
+    const am = j.match.awayMarket;
+    // YES price is in cents (1-99); convert to implied probability
+    const homeProb = pickKalshiPrice(hm);
+    const awayProb = pickKalshiPrice(am);
+    const homeFav = (homeProb != null && awayProb != null) ? homeProb >= awayProb : false;
+
+    slot.innerHTML = `
+      <div class="kalshi-block">
+        <div class="kalshi-head">
+          <span class="kalshi-badge">LIVE WIN PROB</span>
+          <span class="kalshi-source">via Kalshi · YES price</span>
+        </div>
+        <div class="kalshi-row">
+          <div class="kp ${!homeFav ? 'fav' : ''}">
+            <img src="${teamLogo(awayAbbr)}" onerror="this.style.visibility='hidden'" alt="">
+            <span class="kp-team">${escapeHTML(awayAbbr)}</span>
+            <span class="kp-prob">${awayProb != null ? awayProb + "%" : "—"}</span>
+          </div>
+          <div class="kp ${homeFav ? 'fav' : ''}">
+            <img src="${teamLogo(homeAbbr)}" onerror="this.style.visibility='hidden'" alt="">
+            <span class="kp-team">${escapeHTML(homeAbbr)}</span>
+            <span class="kp-prob">${homeProb != null ? homeProb + "%" : "—"}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  } catch (e) {
+    console.warn("[kalshi] failed:", e);
+    slot.innerHTML = ""; // hide gracefully on failure
+  }
+}
+function pickKalshiPrice(m) {
+  if (!m) return null;
+  // Prefer last_price (most recent trade), fall back to mid of bid/ask
+  if (m.lastPrice != null) return Math.round(m.lastPrice);
+  if (m.yesBid != null && m.yesAsk != null) return Math.round((m.yesBid + m.yesAsk) / 2);
+  if (m.yesBid != null) return Math.round(m.yesBid);
+  if (m.yesAsk != null) return Math.round(m.yesAsk);
+  return null;
 }
 
 /* ----- ESPN play-by-play ----- */
