@@ -313,6 +313,11 @@
   }
   .odds-providers strong { color: var(--gold); font-weight: 700; }
   .odds-providers .also { color: var(--ink-dim); margin: 0 6px; }
+  .odds-stamp { color: var(--gold); animation: oddsPulse 0.8s ease-out; }
+  @keyframes oddsPulse {
+    0%   { color: #fff; text-shadow: 0 0 8px var(--gold); }
+    100% { color: var(--gold); text-shadow: none; }
+  }
   .odds-meta {
     display: flex; gap: 14px; padding: 6px 12px 12px;
     font-family: var(--mono); font-size: 11px; color: var(--ink-dim);
@@ -1577,7 +1582,12 @@ function fmtSpread(n) {
 
 async function loadOddsBoard(eventId) {
   const host = document.getElementById("odds-board");
-  host.innerHTML = `<div class="feed-empty">Loading live odds…</div>`;
+  // Only blank-out the panel on the *first* load for this event. On a periodic
+  // refresh we keep the existing odds visible until the new ones arrive (no flash).
+  const isFirstLoad = host.dataset.eventId !== eventId;
+  if (isFirstLoad) host.innerHTML = `<div class="feed-empty">Loading live odds…</div>`;
+  host.dataset.eventId = eventId;
+  console.log("[odds] fetch", eventId, new Date().toLocaleTimeString());
   try {
     // Cache-bust so ESPN's CDN serves fresh data on every refresh
     const url = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${encodeURIComponent(eventId)}&_=${Date.now()}`;
@@ -1651,7 +1661,7 @@ async function loadOddsBoard(eventId) {
         <div class="odds-providers">
           Lines from <strong>${escapeHTML((primary.provider && primary.provider.name) || "Sportsbook")}</strong>
           ${otherList.length ? `<span class="also">·</span> Also: ${otherList.map(n => `<span>${escapeHTML(n)}</span>`).join(" · ")}${moreCount ? ` +${moreCount} more` : ""}` : ""}
-          <span class="also">·</span> Updated ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+          <span class="also">·</span> <span class="odds-stamp">Updated ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>
         </div>
       </div>
     `;
@@ -2001,18 +2011,24 @@ loadLiveScores();
 setInterval(loadLiveScores, 60000); // refresh scores every minute
 syncPlayoffSeriesFromESPN();
 setInterval(syncPlayoffSeriesFromESPN, 5 * 60000); // re-sync every 5 min
-// Refresh live feed (odds + PBP) every 30s — odds move on pre-game too, so we
+// Refresh live feed (odds + PBP) every 20s — odds move on pre-game too, so we
 // refresh whenever the game isn't already final.
-setInterval(() => {
+function refreshActiveFeed() {
   if (!activeFeedGameId) return;
   const ev = LIVE_GAMES_CACHE.find(e => e.id === activeFeedGameId);
   const state = ev && ev.status && ev.status.type && ev.status.type.state;
-  // skip only finalized games; refresh both pre and in states
+  // skip only finalized games; refresh both pre and in states (and unknown)
   if (state === "post") return;
   loadOddsBoard(activeFeedGameId);
   // play-by-play only matters once the game is live
   if (state === "in") loadPlayByPlayFeed(activeFeedGameId);
-}, 30000);
+}
+setInterval(refreshActiveFeed, 20000);
+// Also refresh immediately whenever the tab regains focus (browsers throttle
+// background timers, so the panel can otherwise sit stale after switching tabs)
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") refreshActiveFeed();
+});
 </script>
 </body>
 </html>
