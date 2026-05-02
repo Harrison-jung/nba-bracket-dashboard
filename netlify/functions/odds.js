@@ -1,19 +1,9 @@
-// Server-side proxy for live in-play NBA game-winner probability via Kalshi.
+// Server-side proxy for DraftKings public NBA sportsbook lines.
 //
-// Why a proxy: Kalshi's API serves CORS-restricted responses to browsers,
-// and we want to reshape the payload (only return what we need) and add
-// caching headers Netlify's CDN can use.
-//
-// What it returns:
-//   {
-//     home: "ORL", away: "DET",
-//     match: { homeMarket: {...}, awayMarket: {...} } | null,
-//     debug: { totalNbaMarkets, sampleTickers, matchedTickers }
-//   }
-//
-// First-deploy debug: if `match` is null, inspect `debug.sampleTickers` in
-// the browser console — those are the actual Kalshi ticker formats currently
-// open, which tells us how to refine the team-matching logic.
+// DraftKings exposes a public sportsbook JSON feed (no auth required) but
+// blocks browser CORS. We proxy server-side and return a clean, normalized
+// shape: spread / money line / total, with `isLive` flag so the UI can label
+// pre-game vs. in-play.
 
 const RESP_HEADERS = {
   "Content-Type": "application/json",
@@ -23,38 +13,41 @@ const RESP_HEADERS = {
 
 const UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 
-// ESPN abbr → words that may appear in Kalshi market titles or tickers
+// DraftKings NBA event group id. Stable; changes only if league structure shifts.
+const DK_NBA_EVENT_GROUP = 42648;
+
+// ESPN abbr → name fragments that may appear in DraftKings event/outcome labels
 const TEAM_NAME_FRAGMENTS = {
-  ATL: ["ATL", "HAWKS", "ATLANTA"],
-  BOS: ["BOS", "CELTICS", "BOSTON"],
-  BKN: ["BKN", "BRK", "NETS", "BROOKLYN"],
-  CHA: ["CHA", "CHO", "HORNETS", "CHARLOTTE"],
-  CHI: ["CHI", "BULLS", "CHICAGO"],
-  CLE: ["CLE", "CAVALIERS", "CAVS", "CLEVELAND"],
-  DAL: ["DAL", "MAVERICKS", "MAVS", "DALLAS"],
-  DEN: ["DEN", "NUGGETS", "DENVER"],
-  DET: ["DET", "PISTONS", "DETROIT"],
-  GS:  ["GS", "GSW", "WARRIORS", "GOLDEN"],
-  HOU: ["HOU", "ROCKETS", "HOUSTON"],
-  IND: ["IND", "PACERS", "INDIANA"],
-  LAC: ["LAC", "CLIPPERS"],
-  LAL: ["LAL", "LAKERS"],
-  MEM: ["MEM", "GRIZZLIES", "MEMPHIS"],
-  MIA: ["MIA", "HEAT", "MIAMI"],
-  MIL: ["MIL", "BUCKS", "MILWAUKEE"],
-  MIN: ["MIN", "TIMBERWOLVES", "WOLVES", "MINNESOTA"],
-  NO:  ["NO", "NOP", "PELICANS", "ORLEANS"],
-  NY:  ["NY", "NYK", "KNICKS"],
-  OKC: ["OKC", "THUNDER", "OKLAHOMA"],
-  ORL: ["ORL", "MAGIC", "ORLANDO"],
-  PHI: ["PHI", "76ERS", "SIXERS", "PHILADELPHIA"],
-  PHX: ["PHX", "PHO", "SUNS", "PHOENIX"],
-  POR: ["POR", "BLAZERS", "TRAILBLAZERS", "PORTLAND"],
-  SAC: ["SAC", "KINGS", "SACRAMENTO"],
-  SA:  ["SA", "SAS", "SPURS", "ANTONIO"],
-  TOR: ["TOR", "RAPTORS", "TORONTO"],
-  UTAH:["UTAH", "UTA", "JAZZ"],
-  WAS: ["WAS", "WSH", "WIZARDS", "WASHINGTON"],
+  ATL: ["HAWKS", "ATLANTA"],
+  BOS: ["CELTICS", "BOSTON"],
+  BKN: ["NETS", "BROOKLYN"],
+  CHA: ["HORNETS", "CHARLOTTE"],
+  CHI: ["BULLS", "CHICAGO"],
+  CLE: ["CAVALIERS", "CAVS", "CLEVELAND"],
+  DAL: ["MAVERICKS", "MAVS", "DALLAS"],
+  DEN: ["NUGGETS", "DENVER"],
+  DET: ["PISTONS", "DETROIT"],
+  GS:  ["WARRIORS", "GOLDEN STATE"],
+  HOU: ["ROCKETS", "HOUSTON"],
+  IND: ["PACERS", "INDIANA"],
+  LAC: ["CLIPPERS"],
+  LAL: ["LAKERS"],
+  MEM: ["GRIZZLIES", "MEMPHIS"],
+  MIA: ["HEAT", "MIAMI"],
+  MIL: ["BUCKS", "MILWAUKEE"],
+  MIN: ["TIMBERWOLVES", "MINNESOTA"],
+  NO:  ["PELICANS", "NEW ORLEANS"],
+  NY:  ["KNICKS", "NEW YORK"],
+  OKC: ["THUNDER", "OKLAHOMA"],
+  ORL: ["MAGIC", "ORLANDO"],
+  PHI: ["76ERS", "SIXERS", "PHILADELPHIA"],
+  PHX: ["SUNS", "PHOENIX"],
+  POR: ["BLAZERS", "TRAIL BLAZERS", "PORTLAND"],
+  SAC: ["KINGS", "SACRAMENTO"],
+  SA:  ["SPURS", "SAN ANTONIO"],
+  TOR: ["RAPTORS", "TORONTO"],
+  UTAH:["JAZZ", "UTAH"],
+  WAS: ["WIZARDS", "WASHINGTON"],
 };
 
 exports.handler = async (event) => {
@@ -64,62 +57,53 @@ exports.handler = async (event) => {
   if (!home || !away) return resp(400, { error: "missing home/away query param" });
 
   try {
-    // Pull all open Kalshi markets and filter client-side. (Their API does
-    // support series_ticker filtering, but the sports series ticker varies —
-    // searching everything and filtering by team-name match is more robust.)
-    const url = "https://api.elections.kalshi.com/trade-api/v2/markets?status=open&limit=1000";
+    const url = `https://sportsbook-nash.draftkings.com/sites/US-SB/api/v5/eventgroups/${DK_NBA_EVENT_GROUP}?format=json`;
     const r = await fetch(url, {
-      headers: { "Accept": "application/json", "User-Agent": UA },
+      headers: {
+        "Accept": "application/json",
+        "User-Agent": UA,
+        "Accept-Language": "en-US,en;q=0.9",
+        "Referer": "https://sportsbook.draftkings.com/",
+      },
     });
 
     if (!r.ok) {
       const preview = (await r.text()).slice(0, 240);
-      return resp(r.status, { error: `kalshi responded ${r.status}`, bodyPreview: preview });
+      return resp(r.status, { error: `dk responded ${r.status}`, bodyPreview: preview });
     }
     const j = await r.json();
-    const markets = Array.isArray(j.markets) ? j.markets : [];
-
-    // Likely NBA tickers: contain "NBA" or are under series like KXNBAGAME, NBAGAME, etc.
-    const nbaMarkets = markets.filter(m => {
-      const t = (m.ticker || "").toUpperCase();
-      const ev = (m.event_ticker || "").toUpperCase();
-      const title = (m.title || "").toUpperCase();
-      return /NBA/.test(t) || /NBA/.test(ev) || /NBA/.test(title);
-    });
+    const eg = j.eventGroup || {};
+    const events = Array.isArray(eg.events) ? eg.events : [];
 
     const homeFrags = TEAM_NAME_FRAGMENTS[home] || [home];
     const awayFrags = TEAM_NAME_FRAGMENTS[away] || [away];
 
-    // For a "Pistons @ Magic" game we expect Kalshi has two markets:
-    //   one whose YES means "Pistons win"
-    //   one whose YES means "Magic win"
-    // Identify by yes_sub_title (most reliable) or by ticker fragments.
-    const matchHome = (m) => containsAny(m.yes_sub_title, homeFrags) || containsAny(m.ticker, homeFrags);
-    const matchAway = (m) => containsAny(m.yes_sub_title, awayFrags) || containsAny(m.ticker, awayFrags);
-
-    // Restrict to markets where BOTH team fragments appear somewhere — that's
-    // a single game's market list. Then pick the one whose YES is each team.
-    const gameMarkets = nbaMarkets.filter(m => {
-      const blob = `${m.ticker || ""} ${m.event_ticker || ""} ${m.title || ""}`.toUpperCase();
+    // Find the event matching our two teams
+    const eventIdx = events.findIndex(e => {
+      const blob = `${e.name || ""} ${e.teamName1 || ""} ${e.teamName2 || ""}`.toUpperCase();
       return containsAny(blob, homeFrags) && containsAny(blob, awayFrags);
     });
 
-    const homeMarket = gameMarkets.find(matchHome) || null;
-    const awayMarket = gameMarkets.find(matchAway) || null;
+    if (eventIdx < 0) {
+      return resp(404, {
+        found: false,
+        error: "no DraftKings event matched these teams",
+        searched: { home, away },
+        sampleEvents: events.slice(0, 8).map(e => e.name),
+      });
+    }
+
+    const ev = events[eventIdx];
+    const isLive = !!(ev.eventStatus && (ev.eventStatus.state === "STARTED" || ev.eventStatus.state === "LIVE"));
+    const lines = extractLines(eg, eventIdx, homeFrags, awayFrags);
 
     return resp(200, {
-      home, away,
-      match: (homeMarket || awayMarket)
-        ? { homeMarket: snap(homeMarket), awayMarket: snap(awayMarket) }
-        : null,
-      debug: {
-        totalOpenMarkets: markets.length,
-        totalNbaMarkets: nbaMarkets.length,
-        gameMarketsFound: gameMarkets.length,
-        sampleTickers: nbaMarkets.slice(0, 12).map(m => ({
-          ticker: m.ticker, yes_sub_title: m.yes_sub_title, title: m.title,
-        })),
-      },
+      found: true,
+      source: "DraftKings",
+      eventName: ev.name,
+      eventId: ev.eventId,
+      isLive,
+      ...lines,
       fetchedAt: new Date().toISOString(),
     });
   } catch (e) {
@@ -127,19 +111,84 @@ exports.handler = async (event) => {
   }
 };
 
-function snap(m) {
-  if (!m) return null;
-  return {
-    ticker: m.ticker,
-    title: m.title,
-    yesSubtitle: m.yes_sub_title,
-    yesBid: m.yes_bid,        // cents; implied prob ~ value/100
-    yesAsk: m.yes_ask,
-    lastPrice: m.last_price,
-    volume: m.volume,
-    closeTime: m.close_time,
-    status: m.status,
+// Walk DraftKings' offerCategories → offerSubcategoryDescriptors → offerSubcategory.offers
+// to extract spread/moneyLine/total for the event at `eventIdx`.
+// `offers` is an array-of-arrays; outer index = event index in eg.events.
+function extractLines(eg, eventIdx, homeFrags, awayFrags) {
+  const out = {
+    spread: null,         // home spread (negative = home favored)
+    total: null,
+    homeML: null,
+    awayML: null,
+    homeSpreadOdds: null,
+    awaySpreadOdds: null,
   };
+  const cats = Array.isArray(eg.offerCategories) ? eg.offerCategories : [];
+  for (const cat of cats) {
+    const descs = Array.isArray(cat.offerSubcategoryDescriptors) ? cat.offerSubcategoryDescriptors : [];
+    for (const desc of descs) {
+      const sub = desc.offerSubcategory || {};
+      const offerGroups = Array.isArray(sub.offers) ? sub.offers : [];
+      const offers = offerGroups[eventIdx];
+      if (!Array.isArray(offers)) continue;
+      for (const offer of offers) {
+        applyOffer(offer, out, homeFrags, awayFrags);
+      }
+    }
+  }
+  return out;
+}
+
+function applyOffer(offer, out, homeFrags, awayFrags) {
+  if (!offer || !Array.isArray(offer.outcomes)) return;
+  const label = (offer.label || "").toLowerCase();
+  const outcomes = offer.outcomes;
+
+  // SPREAD
+  if (label.includes("spread") || label.includes("point")) {
+    for (const o of outcomes) {
+      const olabel = (o.label || o.participant || "").toUpperCase();
+      const isHome = containsAny(olabel, homeFrags);
+      const isAway = containsAny(olabel, awayFrags);
+      const line = parseFloat(o.line);
+      const odds = parseInt(o.oddsAmerican, 10);
+      if (isNaN(line)) continue;
+      if (isHome && out.spread == null) {
+        out.spread = line;
+        if (!isNaN(odds)) out.homeSpreadOdds = odds;
+      } else if (isAway) {
+        if (!isNaN(odds)) out.awaySpreadOdds = odds;
+        if (out.spread == null) out.spread = -line; // derive home spread from away
+      }
+    }
+    return;
+  }
+
+  // MONEY LINE
+  if (label.includes("moneyline") || label.includes("money line") || label === "moneyline") {
+    for (const o of outcomes) {
+      const olabel = (o.label || o.participant || "").toUpperCase();
+      const isHome = containsAny(olabel, homeFrags);
+      const isAway = containsAny(olabel, awayFrags);
+      const odds = parseInt(o.oddsAmerican, 10);
+      if (isNaN(odds)) continue;
+      if (isHome && out.homeML == null) out.homeML = odds;
+      else if (isAway && out.awayML == null) out.awayML = odds;
+    }
+    return;
+  }
+
+  // TOTAL (Over/Under)
+  if (label.includes("total") || label.includes("over/under") || label.includes("o/u")) {
+    for (const o of outcomes) {
+      const line = parseFloat(o.line);
+      if (!isNaN(line) && out.total == null) {
+        out.total = line;
+        break;
+      }
+    }
+    return;
+  }
 }
 
 function containsAny(haystack, needles) {

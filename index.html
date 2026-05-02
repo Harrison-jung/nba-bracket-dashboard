@@ -321,40 +321,6 @@
   .odds-kind.live { background: var(--red); color: #fff; }
   .odds-kind.open { background: rgba(255,184,28,0.15); color: var(--gold); border: 1px solid rgba(255,184,28,0.4); }
   .odds-stamp { color: var(--gold); animation: oddsPulse 0.8s ease-out; }
-  .kalshi-block {
-    border: 1px solid rgba(34,197,94,0.35);
-    background: linear-gradient(180deg, rgba(34,197,94,0.08), rgba(34,197,94,0.02));
-    padding: 10px 12px; margin-bottom: 10px;
-    clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
-  }
-  .kalshi-head {
-    display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
-    font: 10px/1 var(--font-mono); letter-spacing: 0.08em; color: var(--ink-dim);
-  }
-  .kalshi-badge {
-    background: #22c55e; color: #000; font-weight: 800;
-    padding: 3px 7px; border-radius: 2px;
-  }
-  .kalshi-source { color: var(--ink-dim); }
-  .kalshi-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .kp { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: rgba(0,0,0,0.25); }
-  .kp.fav { background: rgba(34,197,94,0.18); border-left: 3px solid #22c55e; }
-  .kp img { width: 22px; height: 22px; }
-  .kp-team { font: 700 14px var(--font-display); letter-spacing: 0.06em; flex: 1; }
-  .kp-prob { font: 700 18px var(--font-mono); color: #22c55e; }
-  .kalshi-block.loading, .kalshi-block.no-match, .kalshi-block.error {
-    border-color: rgba(255,255,255,0.12);
-    background: rgba(255,255,255,0.02);
-  }
-  .kalshi-block.no-match .kalshi-badge,
-  .kalshi-block.loading .kalshi-badge,
-  .kalshi-block.error  .kalshi-badge {
-    background: var(--ink-dim); color: #000;
-  }
-  .kalshi-status { font: 12px/1.5 var(--font-body); color: var(--ink); }
-  .kalshi-status.muted { color: var(--ink-dim); }
-  .kalshi-status.err { color: var(--red-hot); }
-  .kalshi-status code { font: 10px var(--font-mono); color: var(--gold); background: rgba(0,0,0,0.4); padding: 1px 4px; border-radius: 2px; }
   @keyframes oddsPulse {
     0%   { color: #fff; text-shadow: 0 0 8px var(--gold); }
     100% { color: var(--gold); text-shadow: none; }
@@ -1594,31 +1560,13 @@ function selectFeedGame(eventId) {
 }
 window.selectFeedGame = selectFeedGame;
 
-/* ----- Live odds board (ESPN summary pickcenter) -----
-   ESPN's summary endpoint returns a `pickcenter` array with lines from multiple
-   sportsbooks (DraftKings, FanDuel, BetMGM, ESPN BET). It's CORS-allowed, so
-   we can fetch it directly from the browser — no proxy needed. */
+/* ----- Live odds board (DraftKings via Netlify proxy) -----
+   We pull live in-play spread / money line / total from DraftKings' public
+   sportsbook JSON. ESPN's pickcenter only exposes opening lines; DraftKings'
+   feed includes live in-play numbers that move with the score.
 
-const PREFERRED_BOOKS = ["DraftKings", "FanDuel", "BetMGM", "Caesars Sportsbook", "ESPN BET", "Bet365"];
-
-function hasLiveBlock(p) {
-  if (!p || !p.current) return false;
-  const c = p.current;
-  return !!(c.spread || c.total || c.homeMoneyLine || c.awayMoneyLine ||
-            c.spreads || c.totals || c.moneyLines);
-}
-function pickPrimaryBook(pickcenter) {
-  if (!pickcenter || !pickcenter.length) return null;
-  // 1. Prefer ANY book that exposes a live in-play `current` block.
-  const live = pickcenter.find(hasLiveBlock);
-  if (live) return live;
-  // 2. Otherwise fall back to our preferred-book ranking (opening lines).
-  for (const name of PREFERRED_BOOKS) {
-    const m = pickcenter.find(p => p.provider && p.provider.name === name);
-    if (m) return m;
-  }
-  return pickcenter[0];
-}
+   This is the ONLY place on the dashboard that doesn't use ESPN as the source.
+   Bracket, scores grid, play-by-play, and series-winner sync still read ESPN. */
 
 function fmtAmerican(n) {
   if (n == null || n === "") return "—";
@@ -1636,73 +1584,56 @@ async function loadOddsBoard(eventId) {
   // Only blank-out the panel on the *first* load for this event. On a periodic
   // refresh we keep the existing odds visible until the new ones arrive (no flash).
   const isFirstLoad = host.dataset.eventId !== eventId;
-  if (isFirstLoad) host.innerHTML = `<div class="feed-empty">Loading live odds…</div>`;
+  if (isFirstLoad) host.innerHTML = `<div class="feed-empty">Loading live odds from DraftKings…</div>`;
   host.dataset.eventId = eventId;
-  console.log("[odds] fetch", eventId, new Date().toLocaleTimeString());
-  try {
-    // Cache-bust so ESPN's CDN serves fresh data on every refresh
-    const url = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${encodeURIComponent(eventId)}&_=${Date.now()}`;
-    const r = await fetch(url, { cache: "no-store" });
-    if (!r.ok) throw new Error("HTTP " + r.status);
-    const j = await r.json();
-    const pickcenter = j.pickcenter || [];
-    const status = (j.header && j.header.competitions && j.header.competitions[0] && j.header.competitions[0].status) || {};
-    const isFinal = status.type && status.type.state === "post";
-    // Expose the raw payload for debugging in the browser console.
-    window.__lastOdds = { eventId, pickcenter, status, raw: j };
-    const liveCount = pickcenter.filter(hasLiveBlock).length;
-    console.log(`[odds] ${pickcenter.length} books, ${liveCount} with live in-play data. Inspect: window.__lastOdds`);
 
-    if (!pickcenter.length) {
-      host.innerHTML = `<div class="odds-empty-note">${isFinal ? "Game is final — no live odds." : "Live odds aren't posted for this game yet."}</div>`;
+  // Look up team abbreviations from the cached ESPN scoreboard so we can
+  // ask DraftKings for the matching event. (We use ESPN here purely to know
+  // *which game* to ask DK about — the odds themselves come from DK.)
+  const ev = LIVE_GAMES_CACHE.find(e => e.id === eventId);
+  if (!ev) {
+    host.innerHTML = `<div class="feed-empty">Game not found in scoreboard.</div>`;
+    return;
+  }
+  const c = (ev.competitions && ev.competitions[0]) || {};
+  const comps = c.competitors || [];
+  const home = comps.find(x => x.homeAway === "home") || comps[0] || {};
+  const away = comps.find(x => x.homeAway === "away") || comps[1] || {};
+  const homeAbbr = normalizeESPNAbbr((home.team && home.team.abbreviation) || "");
+  const awayAbbr = normalizeESPNAbbr((away.team && away.team.abbreviation) || "");
+  const espnState = (ev.status && ev.status.type && ev.status.type.state) || "";
+  const isFinal = espnState === "post";
+
+  console.log("[odds] fetch DK", awayAbbr, "@", homeAbbr, new Date().toLocaleTimeString());
+
+  try {
+    const url = `/.netlify/functions/odds?home=${encodeURIComponent(homeAbbr)}&away=${encodeURIComponent(awayAbbr)}&_=${Date.now()}`;
+    const r = await fetch(url, { cache: "no-store" });
+    const text = await r.text();
+    let j;
+    try { j = JSON.parse(text); }
+    catch { throw new Error("proxy returned non-JSON: " + text.slice(0, 120)); }
+    window.__lastOdds = j;
+
+    if (!r.ok || !j.found) {
+      const samples = (j.sampleEvents || []).slice(0, 3).map(escapeHTML).join("<br>");
+      host.innerHTML = `
+        <div class="odds-empty-note">
+          <strong>${escapeHTML(j.error || ("DraftKings: HTTP " + r.status))}</strong>
+          ${samples ? `<br><br>Sample DK NBA events:<br><small>${samples}</small>` : ""}
+          ${isFinal ? "<br><br><em>Game is final — DK may have removed lines.</em>" : ""}
+        </div>`;
       return;
     }
-    const primary = pickPrimaryBook(pickcenter);
-    if (!primary) { host.innerHTML = `<div class="odds-empty-note">No odds available.</div>`; return; }
 
-    // Identify away/home from the header competition
-    const comp = (j.header && j.header.competitions && j.header.competitions[0]) || {};
-    const comps = comp.competitors || [];
-    const home = comps.find(x => x.homeAway === "home") || comps[0] || {};
-    const away = comps.find(x => x.homeAway === "away") || comps[1] || {};
-    const homeAbbr = normalizeESPNAbbr((home.team && home.team.abbreviation) || "");
-    const awayAbbr = normalizeESPNAbbr((away.team && away.team.abbreviation) || "");
-
-    // Prefer LIVE (in-play) lines from primary.current when the game is on,
-    // and fall back to opening lines (top-level fields) for pre-game.
-    // ESPN's `current` block looks like { spread: {value}, total: {value},
-    // homeMoneyLine: {american}, awayMoneyLine: {american}, ... }
-    const cur = primary.current || {};
-    const live = !!(cur.spread || cur.total || cur.homeMoneyLine || cur.awayMoneyLine);
-    const pickVal = (curObj, topVal) => {
-      if (curObj != null) {
-        if (typeof curObj === "number") return curObj;
-        if (curObj.value != null) return curObj.value;
-        if (curObj.american != null) return curObj.american;
-      }
-      return topVal;
-    };
-    const spread = pickVal(cur.spread, primary.spread);
-    const total  = pickVal(cur.total,  primary.overUnder);
-    const homeML = pickVal(cur.homeMoneyLine, primary.homeTeamOdds && primary.homeTeamOdds.moneyLine);
-    const awayML = pickVal(cur.awayMoneyLine, primary.awayTeamOdds && primary.awayTeamOdds.moneyLine);
-    const homeSpreadOdds = pickVal(cur.homeSpread && cur.homeSpread.odds, primary.homeTeamOdds && primary.homeTeamOdds.spreadOdds);
-    const awaySpreadOdds = pickVal(cur.awaySpread && cur.awaySpread.odds, primary.awayTeamOdds && primary.awayTeamOdds.spreadOdds);
-
-    // ESPN gives the spread relative to the home team (negative = home favored)
+    const { spread, total, homeML, awayML, homeSpreadOdds, awaySpreadOdds, isLive, eventName } = j;
     const homeSpread = spread;
     const awaySpread = spread != null ? -spread : null;
     const homeIsFav = spread != null && spread < 0;
     const awayIsFav = spread != null && spread > 0;
 
-    // Provider list (top 3 + count of others)
-    const others = pickcenter.filter(p => p !== primary).map(p => p.provider && p.provider.name).filter(Boolean);
-    const otherList = others.slice(0, 3);
-    const moreCount = Math.max(0, others.length - otherList.length);
-
     host.innerHTML = `
       <div class="odds-board">
-        <div id="kalshi-prob"></div>
         <div class="odds-row head">
           <div></div>
           <div>Spread</div>
@@ -1728,112 +1659,19 @@ async function loadOddsBoard(eventId) {
           <div class="odds-cell">${total != null ? `U ${total}` : '—'}</div>
         </div>
         <div class="odds-providers">
-          <span class="odds-kind ${live ? 'live' : 'open'}">${live ? 'LIVE IN-PLAY' : 'OPENING LINE'}</span>
+          <span class="odds-kind ${isLive ? 'live' : 'open'}">${isLive ? 'LIVE IN-PLAY' : 'PRE-GAME'}</span>
           <span class="also">·</span>
-          Lines from <strong>${escapeHTML((primary.provider && primary.provider.name) || "Sportsbook")}</strong>
-          ${otherList.length ? `<span class="also">·</span> Also: ${otherList.map(n => `<span>${escapeHTML(n)}</span>`).join(" · ")}${moreCount ? ` +${moreCount} more` : ""}` : ""}
+          Lines from <strong>DraftKings</strong>
           <span class="also">·</span> <span class="odds-stamp">Updated ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>
         </div>
       </div>
     `;
 
-    // Update the panel tag with the book name
     const tag = document.getElementById("odds-tag");
-    if (tag) tag.textContent = (primary.provider && primary.provider.name) || "Vegas";
-
-    // Kick off Kalshi (live, moving win-prob) in parallel — don't block ESPN render
-    loadKalshiProb(homeAbbr, awayAbbr);
+    if (tag) tag.textContent = "DraftKings";
   } catch (e) {
     host.innerHTML = `<div class="feed-empty">Odds unavailable: ${escapeHTML(e.message)}</div>`;
   }
-}
-
-/* ----- Kalshi live win-probability (via our Netlify proxy) ----- */
-async function loadKalshiProb(homeAbbr, awayAbbr) {
-  const slot = document.getElementById("kalshi-prob");
-  if (!slot) return;
-  // Show a loading state immediately so the user can see this section exists
-  if (!slot.innerHTML) slot.innerHTML = renderKalshiShell("loading", { homeAbbr, awayAbbr });
-  try {
-    const url = `/.netlify/functions/odds?home=${encodeURIComponent(homeAbbr)}&away=${encodeURIComponent(awayAbbr)}&_=${Date.now()}`;
-    const r = await fetch(url, { cache: "no-store" });
-    const text = await r.text();
-    let j;
-    try { j = JSON.parse(text); } catch { throw new Error("non-JSON response: " + text.slice(0, 120)); }
-    window.__lastKalshi = j;
-    console.log("[kalshi]", j);
-
-    if (!r.ok) {
-      slot.innerHTML = renderKalshiShell("error", { homeAbbr, awayAbbr, err: `HTTP ${r.status}: ${j.error || "unknown"}` });
-      return;
-    }
-    if (!j.match || (!j.match.homeMarket && !j.match.awayMarket)) {
-      slot.innerHTML = renderKalshiShell("no-match", { homeAbbr, awayAbbr, debug: j.debug });
-      return;
-    }
-    const hm = j.match.homeMarket;
-    const am = j.match.awayMarket;
-    const homeProb = pickKalshiPrice(hm);
-    const awayProb = pickKalshiPrice(am);
-    const homeFav = (homeProb != null && awayProb != null) ? homeProb >= awayProb : false;
-    slot.innerHTML = renderKalshiShell("ok", { homeAbbr, awayAbbr, homeProb, awayProb, homeFav });
-  } catch (e) {
-    console.warn("[kalshi] failed:", e);
-    slot.innerHTML = renderKalshiShell("error", { homeAbbr, awayAbbr, err: e.message });
-  }
-}
-
-function renderKalshiShell(state, opts) {
-  const { homeAbbr, awayAbbr } = opts;
-  let body = "";
-  if (state === "loading") {
-    body = `<div class="kalshi-status">Checking Kalshi for live markets…</div>`;
-  } else if (state === "ok") {
-    const { homeProb, awayProb, homeFav } = opts;
-    body = `
-      <div class="kalshi-row">
-        <div class="kp ${!homeFav ? 'fav' : ''}">
-          <img src="${teamLogo(awayAbbr)}" onerror="this.style.visibility='hidden'" alt="">
-          <span class="kp-team">${escapeHTML(awayAbbr)}</span>
-          <span class="kp-prob">${awayProb != null ? awayProb + "%" : "—"}</span>
-        </div>
-        <div class="kp ${homeFav ? 'fav' : ''}">
-          <img src="${teamLogo(homeAbbr)}" onerror="this.style.visibility='hidden'" alt="">
-          <span class="kp-team">${escapeHTML(homeAbbr)}</span>
-          <span class="kp-prob">${homeProb != null ? homeProb + "%" : "—"}</span>
-        </div>
-      </div>`;
-  } else if (state === "no-match") {
-    const d = opts.debug || {};
-    const samples = (d.sampleTickers || []).slice(0, 4)
-      .map(s => `<code>${escapeHTML(s.ticker || "?")}</code>`).join(", ");
-    body = `
-      <div class="kalshi-status muted">
-        No Kalshi market matched <strong>${escapeHTML(awayAbbr)} @ ${escapeHTML(homeAbbr)}</strong>.<br>
-        ${d.totalNbaMarkets || 0} NBA markets open right now${samples ? `; e.g. ${samples}` : ""}.
-        ${d.totalNbaMarkets === 0 ? "<br><em>Kalshi may not currently list NBA per-game markets.</em>" : ""}
-      </div>`;
-  } else if (state === "error") {
-    body = `<div class="kalshi-status err">Kalshi unavailable: ${escapeHTML(opts.err || "unknown error")}</div>`;
-  }
-  const badge = state === "ok" ? "LIVE WIN PROB" : "KALSHI";
-  return `
-    <div class="kalshi-block ${state}">
-      <div class="kalshi-head">
-        <span class="kalshi-badge">${badge}</span>
-        <span class="kalshi-source">${state === "ok" ? "Live YES price · refreshes with score" : "Prediction market"}</span>
-      </div>
-      ${body}
-    </div>`;
-}
-function pickKalshiPrice(m) {
-  if (!m) return null;
-  // Prefer last_price (most recent trade), fall back to mid of bid/ask
-  if (m.lastPrice != null) return Math.round(m.lastPrice);
-  if (m.yesBid != null && m.yesAsk != null) return Math.round((m.yesBid + m.yesAsk) / 2);
-  if (m.yesBid != null) return Math.round(m.yesBid);
-  if (m.yesAsk != null) return Math.round(m.yesAsk);
-  return null;
 }
 
 /* ----- ESPN play-by-play ----- */
