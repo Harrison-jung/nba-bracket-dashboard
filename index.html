@@ -342,6 +342,19 @@
   .kp img { width: 22px; height: 22px; }
   .kp-team { font: 700 14px var(--font-display); letter-spacing: 0.06em; flex: 1; }
   .kp-prob { font: 700 18px var(--font-mono); color: #22c55e; }
+  .kalshi-block.loading, .kalshi-block.no-match, .kalshi-block.error {
+    border-color: rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.02);
+  }
+  .kalshi-block.no-match .kalshi-badge,
+  .kalshi-block.loading .kalshi-badge,
+  .kalshi-block.error  .kalshi-badge {
+    background: var(--ink-dim); color: #000;
+  }
+  .kalshi-status { font: 12px/1.5 var(--font-body); color: var(--ink); }
+  .kalshi-status.muted { color: var(--ink-dim); }
+  .kalshi-status.err { color: var(--red-hot); }
+  .kalshi-status code { font: 10px var(--font-mono); color: var(--gold); background: rgba(0,0,0,0.4); padding: 1px 4px; border-radius: 2px; }
   @keyframes oddsPulse {
     0%   { color: #fff; text-shadow: 0 0 8px var(--gold); }
     100% { color: var(--gold); text-shadow: none; }
@@ -1739,49 +1752,79 @@ async function loadOddsBoard(eventId) {
 async function loadKalshiProb(homeAbbr, awayAbbr) {
   const slot = document.getElementById("kalshi-prob");
   if (!slot) return;
+  // Show a loading state immediately so the user can see this section exists
+  if (!slot.innerHTML) slot.innerHTML = renderKalshiShell("loading", { homeAbbr, awayAbbr });
   try {
     const url = `/.netlify/functions/odds?home=${encodeURIComponent(homeAbbr)}&away=${encodeURIComponent(awayAbbr)}&_=${Date.now()}`;
     const r = await fetch(url, { cache: "no-store" });
-    if (!r.ok) throw new Error("HTTP " + r.status);
-    const j = await r.json();
-    window.__lastKalshi = j; // for console debug
-    console.log(`[kalshi] match=${!!j.match}, ${j.debug?.totalNbaMarkets || 0} NBA markets, ${j.debug?.gameMarketsFound || 0} for this game`);
+    const text = await r.text();
+    let j;
+    try { j = JSON.parse(text); } catch { throw new Error("non-JSON response: " + text.slice(0, 120)); }
+    window.__lastKalshi = j;
+    console.log("[kalshi]", j);
 
+    if (!r.ok) {
+      slot.innerHTML = renderKalshiShell("error", { homeAbbr, awayAbbr, err: `HTTP ${r.status}: ${j.error || "unknown"}` });
+      return;
+    }
     if (!j.match || (!j.match.homeMarket && !j.match.awayMarket)) {
-      slot.innerHTML = ""; // silently hide if no Kalshi market for this game
+      slot.innerHTML = renderKalshiShell("no-match", { homeAbbr, awayAbbr, debug: j.debug });
       return;
     }
     const hm = j.match.homeMarket;
     const am = j.match.awayMarket;
-    // YES price is in cents (1-99); convert to implied probability
     const homeProb = pickKalshiPrice(hm);
     const awayProb = pickKalshiPrice(am);
     const homeFav = (homeProb != null && awayProb != null) ? homeProb >= awayProb : false;
-
-    slot.innerHTML = `
-      <div class="kalshi-block">
-        <div class="kalshi-head">
-          <span class="kalshi-badge">LIVE WIN PROB</span>
-          <span class="kalshi-source">via Kalshi · YES price</span>
-        </div>
-        <div class="kalshi-row">
-          <div class="kp ${!homeFav ? 'fav' : ''}">
-            <img src="${teamLogo(awayAbbr)}" onerror="this.style.visibility='hidden'" alt="">
-            <span class="kp-team">${escapeHTML(awayAbbr)}</span>
-            <span class="kp-prob">${awayProb != null ? awayProb + "%" : "—"}</span>
-          </div>
-          <div class="kp ${homeFav ? 'fav' : ''}">
-            <img src="${teamLogo(homeAbbr)}" onerror="this.style.visibility='hidden'" alt="">
-            <span class="kp-team">${escapeHTML(homeAbbr)}</span>
-            <span class="kp-prob">${homeProb != null ? homeProb + "%" : "—"}</span>
-          </div>
-        </div>
-      </div>
-    `;
+    slot.innerHTML = renderKalshiShell("ok", { homeAbbr, awayAbbr, homeProb, awayProb, homeFav });
   } catch (e) {
     console.warn("[kalshi] failed:", e);
-    slot.innerHTML = ""; // hide gracefully on failure
+    slot.innerHTML = renderKalshiShell("error", { homeAbbr, awayAbbr, err: e.message });
   }
+}
+
+function renderKalshiShell(state, opts) {
+  const { homeAbbr, awayAbbr } = opts;
+  let body = "";
+  if (state === "loading") {
+    body = `<div class="kalshi-status">Checking Kalshi for live markets…</div>`;
+  } else if (state === "ok") {
+    const { homeProb, awayProb, homeFav } = opts;
+    body = `
+      <div class="kalshi-row">
+        <div class="kp ${!homeFav ? 'fav' : ''}">
+          <img src="${teamLogo(awayAbbr)}" onerror="this.style.visibility='hidden'" alt="">
+          <span class="kp-team">${escapeHTML(awayAbbr)}</span>
+          <span class="kp-prob">${awayProb != null ? awayProb + "%" : "—"}</span>
+        </div>
+        <div class="kp ${homeFav ? 'fav' : ''}">
+          <img src="${teamLogo(homeAbbr)}" onerror="this.style.visibility='hidden'" alt="">
+          <span class="kp-team">${escapeHTML(homeAbbr)}</span>
+          <span class="kp-prob">${homeProb != null ? homeProb + "%" : "—"}</span>
+        </div>
+      </div>`;
+  } else if (state === "no-match") {
+    const d = opts.debug || {};
+    const samples = (d.sampleTickers || []).slice(0, 4)
+      .map(s => `<code>${escapeHTML(s.ticker || "?")}</code>`).join(", ");
+    body = `
+      <div class="kalshi-status muted">
+        No Kalshi market matched <strong>${escapeHTML(awayAbbr)} @ ${escapeHTML(homeAbbr)}</strong>.<br>
+        ${d.totalNbaMarkets || 0} NBA markets open right now${samples ? `; e.g. ${samples}` : ""}.
+        ${d.totalNbaMarkets === 0 ? "<br><em>Kalshi may not currently list NBA per-game markets.</em>" : ""}
+      </div>`;
+  } else if (state === "error") {
+    body = `<div class="kalshi-status err">Kalshi unavailable: ${escapeHTML(opts.err || "unknown error")}</div>`;
+  }
+  const badge = state === "ok" ? "LIVE WIN PROB" : "KALSHI";
+  return `
+    <div class="kalshi-block ${state}">
+      <div class="kalshi-head">
+        <span class="kalshi-badge">${badge}</span>
+        <span class="kalshi-source">${state === "ok" ? "Live YES price · refreshes with score" : "Prediction market"}</span>
+      </div>
+      ${body}
+    </div>`;
 }
 function pickKalshiPrice(m) {
   if (!m) return null;
