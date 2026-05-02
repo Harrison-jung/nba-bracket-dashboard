@@ -313,6 +313,13 @@
   }
   .odds-providers strong { color: var(--gold); font-weight: 700; }
   .odds-providers .also { color: var(--ink-dim); margin: 0 6px; }
+  .odds-kind {
+    display: inline-block; padding: 2px 6px; border-radius: 2px;
+    font: 10px/1 var(--font-mono); letter-spacing: 0.08em; font-weight: 700;
+    vertical-align: 1px;
+  }
+  .odds-kind.live { background: var(--red); color: #fff; }
+  .odds-kind.open { background: rgba(255,184,28,0.15); color: var(--gold); border: 1px solid rgba(255,184,28,0.4); }
   .odds-stamp { color: var(--gold); animation: oddsPulse 0.8s ease-out; }
   @keyframes oddsPulse {
     0%   { color: #fff; text-shadow: 0 0 8px var(--gold); }
@@ -1613,13 +1620,26 @@ async function loadOddsBoard(eventId) {
     const homeAbbr = normalizeESPNAbbr((home.team && home.team.abbreviation) || "");
     const awayAbbr = normalizeESPNAbbr((away.team && away.team.abbreviation) || "");
 
-    // Pull lines (ESPN's payload has multiple shapes — try in priority order)
-    const spread = primary.spread != null ? primary.spread : (primary.current && primary.current.spread && primary.current.spread.value);
-    const total  = primary.overUnder != null ? primary.overUnder : (primary.current && primary.current.total && primary.current.total.value);
-    const homeML = (primary.homeTeamOdds && primary.homeTeamOdds.moneyLine) ?? (primary.current && primary.current.homeMoneyLine && primary.current.homeMoneyLine.american);
-    const awayML = (primary.awayTeamOdds && primary.awayTeamOdds.moneyLine) ?? (primary.current && primary.current.awayMoneyLine && primary.current.awayMoneyLine.american);
-    const homeSpreadOdds = (primary.homeTeamOdds && primary.homeTeamOdds.spreadOdds);
-    const awaySpreadOdds = (primary.awayTeamOdds && primary.awayTeamOdds.spreadOdds);
+    // Prefer LIVE (in-play) lines from primary.current when the game is on,
+    // and fall back to opening lines (top-level fields) for pre-game.
+    // ESPN's `current` block looks like { spread: {value}, total: {value},
+    // homeMoneyLine: {american}, awayMoneyLine: {american}, ... }
+    const cur = primary.current || {};
+    const live = !!(cur.spread || cur.total || cur.homeMoneyLine || cur.awayMoneyLine);
+    const pickVal = (curObj, topVal) => {
+      if (curObj != null) {
+        if (typeof curObj === "number") return curObj;
+        if (curObj.value != null) return curObj.value;
+        if (curObj.american != null) return curObj.american;
+      }
+      return topVal;
+    };
+    const spread = pickVal(cur.spread, primary.spread);
+    const total  = pickVal(cur.total,  primary.overUnder);
+    const homeML = pickVal(cur.homeMoneyLine, primary.homeTeamOdds && primary.homeTeamOdds.moneyLine);
+    const awayML = pickVal(cur.awayMoneyLine, primary.awayTeamOdds && primary.awayTeamOdds.moneyLine);
+    const homeSpreadOdds = pickVal(cur.homeSpread && cur.homeSpread.odds, primary.homeTeamOdds && primary.homeTeamOdds.spreadOdds);
+    const awaySpreadOdds = pickVal(cur.awaySpread && cur.awaySpread.odds, primary.awayTeamOdds && primary.awayTeamOdds.spreadOdds);
 
     // ESPN gives the spread relative to the home team (negative = home favored)
     const homeSpread = spread;
@@ -1659,6 +1679,8 @@ async function loadOddsBoard(eventId) {
           <div class="odds-cell">${total != null ? `U ${total}` : '—'}</div>
         </div>
         <div class="odds-providers">
+          <span class="odds-kind ${live ? 'live' : 'open'}">${live ? 'LIVE IN-PLAY' : 'OPENING LINE'}</span>
+          <span class="also">·</span>
           Lines from <strong>${escapeHTML((primary.provider && primary.provider.name) || "Sportsbook")}</strong>
           ${otherList.length ? `<span class="also">·</span> Also: ${otherList.map(n => `<span>${escapeHTML(n)}</span>`).join(" · ")}${moreCount ? ` +${moreCount} more` : ""}` : ""}
           <span class="also">·</span> <span class="odds-stamp">Updated ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>
