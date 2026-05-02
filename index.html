@@ -2059,7 +2059,7 @@ function refreshActiveFeed() {
   // play-by-play only matters once the game is live
   if (state === "in") loadPlayByPlayFeed(activeFeedGameId);
 }
-setInterval(refreshActiveFeed, 20000);
+setInterval(refreshActiveFeed, 60000);
 // Also refresh immediately whenever the tab regains focus (browsers throttle
 // background timers, so the panel can otherwise sit stale after switching tabs)
 document.addEventListener("visibilitychange", () => {
