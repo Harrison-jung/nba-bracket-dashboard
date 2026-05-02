@@ -1579,8 +1579,9 @@ async function loadOddsBoard(eventId) {
   const host = document.getElementById("odds-board");
   host.innerHTML = `<div class="feed-empty">Loading live odds…</div>`;
   try {
-    const url = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${encodeURIComponent(eventId)}`;
-    const r = await fetch(url);
+    // Cache-bust so ESPN's CDN serves fresh data on every refresh
+    const url = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${encodeURIComponent(eventId)}&_=${Date.now()}`;
+    const r = await fetch(url, { cache: "no-store" });
     if (!r.ok) throw new Error("HTTP " + r.status);
     const j = await r.json();
     const pickcenter = j.pickcenter || [];
@@ -1650,6 +1651,7 @@ async function loadOddsBoard(eventId) {
         <div class="odds-providers">
           Lines from <strong>${escapeHTML((primary.provider && primary.provider.name) || "Sportsbook")}</strong>
           ${otherList.length ? `<span class="also">·</span> Also: ${otherList.map(n => `<span>${escapeHTML(n)}</span>`).join(" · ")}${moreCount ? ` +${moreCount} more` : ""}` : ""}
+          <span class="also">·</span> Updated ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
         </div>
       </div>
     `;
@@ -1667,8 +1669,9 @@ async function loadPlayByPlayFeed(eventId) {
   const list = document.getElementById("pbp-feed");
   list.innerHTML = `<div class="feed-empty">Loading play-by-play…</div>`;
   try {
-    const url = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${encodeURIComponent(eventId)}`;
-    const r = await fetch(url);
+    // Cache-bust so ESPN's CDN serves fresh data on every refresh
+    const url = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${encodeURIComponent(eventId)}&_=${Date.now()}`;
+    const r = await fetch(url, { cache: "no-store" });
     if (!r.ok) throw new Error("HTTP " + r.status);
     const j = await r.json();
     // ESPN summary surfaces plays as either j.plays (array) or under j.drives. Use plays + lastPlay.
@@ -1998,15 +2001,18 @@ loadLiveScores();
 setInterval(loadLiveScores, 60000); // refresh scores every minute
 syncPlayoffSeriesFromESPN();
 setInterval(syncPlayoffSeriesFromESPN, 5 * 60000); // re-sync every 5 min
-// Refresh live feed (odds + PBP) every 45s when a live game is selected
+// Refresh live feed (odds + PBP) every 30s — odds move on pre-game too, so we
+// refresh whenever the game isn't already final.
 setInterval(() => {
   if (!activeFeedGameId) return;
   const ev = LIVE_GAMES_CACHE.find(e => e.id === activeFeedGameId);
-  const isLive = ev && ev.status && ev.status.type && ev.status.type.state === "in";
-  if (!isLive) return;
+  const state = ev && ev.status && ev.status.type && ev.status.type.state;
+  // skip only finalized games; refresh both pre and in states
+  if (state === "post") return;
   loadOddsBoard(activeFeedGameId);
-  loadPlayByPlayFeed(activeFeedGameId);
-}, 45000);
+  // play-by-play only matters once the game is live
+  if (state === "in") loadPlayByPlayFeed(activeFeedGameId);
+}, 30000);
 </script>
 </body>
 </html>
