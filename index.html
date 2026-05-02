@@ -1567,8 +1567,18 @@ window.selectFeedGame = selectFeedGame;
 
 const PREFERRED_BOOKS = ["DraftKings", "FanDuel", "BetMGM", "Caesars Sportsbook", "ESPN BET", "Bet365"];
 
+function hasLiveBlock(p) {
+  if (!p || !p.current) return false;
+  const c = p.current;
+  return !!(c.spread || c.total || c.homeMoneyLine || c.awayMoneyLine ||
+            c.spreads || c.totals || c.moneyLines);
+}
 function pickPrimaryBook(pickcenter) {
   if (!pickcenter || !pickcenter.length) return null;
+  // 1. Prefer ANY book that exposes a live in-play `current` block.
+  const live = pickcenter.find(hasLiveBlock);
+  if (live) return live;
+  // 2. Otherwise fall back to our preferred-book ranking (opening lines).
   for (const name of PREFERRED_BOOKS) {
     const m = pickcenter.find(p => p.provider && p.provider.name === name);
     if (m) return m;
@@ -1604,6 +1614,10 @@ async function loadOddsBoard(eventId) {
     const pickcenter = j.pickcenter || [];
     const status = (j.header && j.header.competitions && j.header.competitions[0] && j.header.competitions[0].status) || {};
     const isFinal = status.type && status.type.state === "post";
+    // Expose the raw payload for debugging in the browser console.
+    window.__lastOdds = { eventId, pickcenter, status, raw: j };
+    const liveCount = pickcenter.filter(hasLiveBlock).length;
+    console.log(`[odds] ${pickcenter.length} books, ${liveCount} with live in-play data. Inspect: window.__lastOdds`);
 
     if (!pickcenter.length) {
       host.innerHTML = `<div class="odds-empty-note">${isFinal ? "Game is final — no live odds." : "Live odds aren't posted for this game yet."}</div>`;
@@ -2033,7 +2047,7 @@ loadLiveScores();
 setInterval(loadLiveScores, 60000); // refresh scores every minute
 syncPlayoffSeriesFromESPN();
 setInterval(syncPlayoffSeriesFromESPN, 5 * 60000); // re-sync every 5 min
-// Refresh live feed (odds + PBP) every 20s — odds move on pre-game too, so we
+// Refresh live feed (odds + PBP) every 60s — odds move on pre-game too, so we
 // refresh whenever the game isn't already final.
 function refreshActiveFeed() {
   if (!activeFeedGameId) return;
