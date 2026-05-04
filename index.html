@@ -275,66 +275,92 @@
   .pbp-clock { color: var(--gold); font-family: var(--mono); font-weight: 700; }
   .pbp-score { color: var(--ink); font-family: var(--mono); font-weight: 700; }
 
-  /* Live odds board */
-  .odds-board { display: grid; gap: 8px; }
-  .odds-board .odds-row {
-    display: grid; grid-template-columns: 90px 1fr 1fr 1fr;
-    align-items: center; gap: 6px; padding: 12px 14px;
-    background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
-    border-left: 3px solid var(--bg-elev3);
-    font-family: var(--mono); font-size: 14px; font-weight: 700;
-    color: var(--ink);
+  /* ---------- Pool Impact (series-level outcomes) ---------- */
+  #pool-impact-host {
+    display: grid; gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
   }
-  .odds-board .odds-row.fav { border-left-color: var(--gold); }
-  .odds-board .odds-row.dog { border-left-color: var(--red); }
-  .odds-board .odds-row.head {
-    background: transparent; border-left: none; padding: 4px 14px 0;
-    font-size: 10px; color: var(--muted); letter-spacing: .14em;
-    text-transform: uppercase; font-weight: 700;
+  @media (max-width: 700px) {
+    #pool-impact-host { grid-template-columns: 1fr; }
   }
-  .odds-board .odds-team {
-    display: flex; align-items: center; gap: 8px;
+  .impact-card {
+    background: var(--bg-elev2);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--gold);
+    padding: 14px 16px 12px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .impact-card.locked { border-left-color: var(--ink-dim); opacity: 0.78; }
+  .impact-card.live   { border-left-color: var(--red); }
+  .impact-head {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    font-family: var(--mono); font-size: 10px; letter-spacing: .14em;
+    text-transform: uppercase;
+  }
+  .impact-head .impact-round { color: var(--gold); font-weight: 700; }
+  .impact-head .impact-id    { color: var(--muted); }
+  .impact-head .impact-pts   { margin-left: auto; color: var(--ink); font-weight: 700; }
+  .impact-head .impact-state {
+    padding: 2px 6px; font-weight: 700;
+  }
+  .impact-head .impact-state.live { background: var(--red); color: #fff; }
+  .impact-head .impact-state.upcoming { background: rgba(255,184,28,0.15); color: var(--gold); border: 1px solid rgba(255,184,28,0.4); }
+  .impact-head .impact-state.complete { background: rgba(255,255,255,0.06); color: var(--ink-dim); }
+  .impact-matchup {
+    display: grid; grid-template-columns: 1fr auto 1fr;
+    align-items: center; gap: 10px; padding: 4px 0 2px;
+  }
+  .impact-team {
+    display: flex; align-items: center; gap: 10px;
     font-family: var(--display); font-size: 18px; letter-spacing: .03em;
-    text-transform: uppercase; font-weight: 400;
+    text-transform: uppercase; color: var(--ink);
   }
-  .odds-board .odds-team img {
-    width: 26px; height: 26px; object-fit: contain;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,.5));
-  }
-  .odds-board .odds-cell { font-variant-numeric: tabular-nums; }
-  .odds-board .odds-cell .dim { color: var(--muted); font-size: 11px; margin-left: 4px; }
-  .odds-board .odds-cell.gold { color: var(--gold); }
-  .odds-board .odds-cell.red { color: var(--red-hot); }
-  .odds-providers {
-    margin-top: 8px; padding: 8px 12px;
-    font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
-    color: var(--muted); text-transform: uppercase;
-    border-top: 1px dashed var(--line);
-  }
-  .odds-providers strong { color: var(--gold); font-weight: 700; }
-  .odds-providers .also { color: var(--ink-dim); margin: 0 6px; }
-  .odds-kind {
-    display: inline-block; padding: 2px 6px; border-radius: 2px;
-    font: 10px/1 var(--font-mono); letter-spacing: 0.08em; font-weight: 700;
-    vertical-align: 1px;
-  }
-  .odds-kind.live { background: var(--red); color: #fff; }
-  .odds-kind.open { background: rgba(255,184,28,0.15); color: var(--gold); border: 1px solid rgba(255,184,28,0.4); }
-  .odds-stamp { color: var(--gold); animation: oddsPulse 0.8s ease-out; }
-  @keyframes oddsPulse {
-    0%   { color: #fff; text-shadow: 0 0 8px var(--gold); }
-    100% { color: var(--gold); text-shadow: none; }
-  }
-  .odds-meta {
-    display: flex; gap: 14px; padding: 6px 12px 12px;
+  .impact-team.right { justify-content: flex-end; }
+  .impact-team img { width: 28px; height: 28px; object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,.5)); }
+  .impact-team .seed { color: var(--muted); font-size: 12px; font-family: var(--mono); }
+  .impact-vs { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .14em; }
+  .impact-status {
+    display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
     font-family: var(--mono); font-size: 11px; color: var(--ink-dim);
-    letter-spacing: .04em;
+    letter-spacing: .06em; padding: 4px 0;
+    border-top: 1px dashed var(--line); border-bottom: 1px dashed var(--line);
   }
-  .odds-meta .lbl { color: var(--gold); font-weight: 700; }
-  .odds-empty-note {
-    color: var(--muted); font-size: 12px; padding: 16px 4px;
+  .impact-status .gold { color: var(--gold); font-weight: 700; }
+  .impact-status .red  { color: var(--red-hot); font-weight: 700; }
+  table.impact-table { width: 100%; border-collapse: collapse; }
+  table.impact-table th, table.impact-table td {
+    padding: 6px 4px; text-align: right; font-size: 12px;
+    font-family: var(--mono); font-variant-numeric: tabular-nums;
+    border-bottom: 1px solid var(--line);
+  }
+  table.impact-table th {
+    color: var(--muted); font-size: 9px; text-transform: uppercase;
+    letter-spacing: .12em; font-weight: 700;
+  }
+  table.impact-table td.user, table.impact-table th.user {
+    text-align: left; color: var(--ink); font-family: var(--body);
+    font-weight: 700; font-size: 12px; max-width: 130px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  table.impact-table td.pick { color: var(--ink-dim); }
+  table.impact-table td.pick.win  { color: var(--gold);    font-weight: 700; }
+  table.impact-table td.pick.dead { color: var(--red-hot); text-decoration: line-through; }
+  table.impact-table td.proj { color: var(--ink); }
+  table.impact-table td.proj.up   { color: var(--gold);    font-weight: 700; }
+  table.impact-table td.proj.down { color: var(--red-hot); }
+  table.impact-table td.proj.same { color: var(--ink-dim); }
+  table.impact-table tr:last-child td { border-bottom: none; }
+  table.impact-table tr.you td { background: rgba(255,184,28,.04); }
+  .impact-empty {
+    color: var(--muted); font-size: 12px; padding: 14px 4px;
     text-align: center; font-style: italic;
   }
+  .impact-locked-note {
+    font-family: var(--mono); font-size: 11px; color: var(--ink-dim);
+    padding: 8px 0 4px; letter-spacing: .04em;
+  }
+  .impact-locked-note .winner { color: var(--gold); font-weight: 700; }
 
   /* Game selector tabs for the feed */
   .game-selector { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
@@ -623,28 +649,25 @@
   </section>
 
   <section id="live-feed-section" style="display:none">
-    <h2 class="section">Live Feed <span class="badge" id="feed-game-label">—</span><span class="sub" id="feed-sub">Crowd reaction · Play-by-play</span></h2>
+    <h2 class="section">Live Feed <span class="badge" id="feed-game-label">—</span><span class="sub" id="feed-sub">Play-by-play</span></h2>
     <div class="game-selector" id="feed-selector"></div>
-    <div class="feed-grid">
-      <div class="card feed-card">
-        <div class="feed-head">
-          <div class="feed-title">Live Odds Board</div>
-          <div class="feed-tag" id="odds-tag">Vegas</div>
-        </div>
-        <div id="odds-board">
-          <div class="feed-empty">Pick a game above to load live odds.</div>
-        </div>
+    <div class="card feed-card">
+      <div class="feed-head">
+        <div class="feed-title">Play-by-Play</div>
+        <div class="feed-tag" id="pbp-tag">ESPN</div>
       </div>
-      <div class="card feed-card">
-        <div class="feed-head">
-          <div class="feed-title">Play-by-Play</div>
-          <div class="feed-tag" id="pbp-tag">ESPN</div>
-        </div>
-        <div class="feed-list" id="pbp-feed">
-          <div class="feed-empty">Pick a game above to load play-by-play.</div>
-        </div>
+      <div class="feed-list" id="pbp-feed">
+        <div class="feed-empty">Pick a game above to load play-by-play.</div>
       </div>
     </div>
+  </section>
+
+  <section id="pool-impact-section">
+    <h2 class="section">Pool Impact
+      <span class="badge">By Series</span>
+      <span class="sub">Projected max points if each team wins · No external data</span>
+    </h2>
+    <div id="pool-impact-host"></div>
   </section>
 
   <section class="grid-2">
@@ -1152,6 +1175,7 @@ function render() {
 
   renderLeaderboard();
   renderProbability();
+  renderPoolImpact();
   renderUserTabs();
   renderBracket();
 
@@ -1239,6 +1263,170 @@ function renderProbability() {
         <div class="pct">${pct}%</div>
       </div>`;
   }).join("");
+}
+
+/* =========================================================================
+   7B. POOL IMPACT — projected leaderboard outcomes per series
+   What it does: for every series with both teams known, simulate "Team A wins"
+   and "Team B wins", and show each member's projected ceiling under both
+   scenarios. Uses maxPossiblePoints (which already handles downstream picks
+   dying when an upstream team is eliminated). 100% client-side, zero network.
+   ========================================================================= */
+function projectedMaxIfWinner(seriesId, winningTeam, userName) {
+  const series = seriesById(seriesId);
+  if (!series) return 0;
+  const origWinner = series.winner;
+  series.winner = winningTeam;
+  const result = maxPossiblePoints(userName);
+  series.winner = origWinner;
+  return result;
+}
+
+function renderPoolImpact() {
+  const host = document.getElementById("pool-impact-host");
+  if (!host) return;
+  // Order series by round, conference, id to keep the layout stable
+  const order = ["WR1-1","WR1-2","WR1-3","WR1-4","ER1-1","ER1-2","ER1-3","ER1-4",
+                 "WR2-1","WR2-2","ER2-1","ER2-2","WCF","ECF","FIN"];
+  const cards = [];
+  for (const id of order) {
+    const s = seriesById(id);
+    if (!s) continue;
+    cards.push(renderImpactCard(s));
+  }
+  host.innerHTML = cards.join("") || `<div class="impact-empty">No series to project.</div>`;
+}
+
+function renderImpactCard(s) {
+  const teamA = effectiveTeamA(s);
+  const teamB = effectiveTeamB(s);
+  const seedA = effectiveSeedA(s);
+  const seedB = effectiveSeedB(s);
+  const ptsValue = DATA.scoring[s.round] || 0;
+  const roundLabel = ({ R1: "Round 1", R2: "Conf Semis", CF: "Conf Finals", FIN: "NBA Finals" })[s.round] || s.round;
+
+  // Card header (always shown)
+  const head = `
+    <div class="impact-head">
+      <span class="impact-round">${escapeHTML(roundLabel)}</span>
+      <span class="impact-id">${escapeHTML(s.id)}</span>
+      <span class="impact-state ${s.status || 'upcoming'}">${escapeHTML((s.status || 'upcoming').toUpperCase())}</span>
+      <span class="impact-pts">${ptsValue} PTS</span>
+    </div>`;
+
+  // Teams not yet known (later rounds awaiting feeders)
+  if (!teamA || !teamB) {
+    const feedersDesc = (s.feeders || []).join(" / ");
+    return `
+      <div class="impact-card">
+        ${head}
+        <div class="impact-empty">Awaiting ${escapeHTML(feedersDesc || 'earlier round')}.</div>
+      </div>`;
+  }
+
+  // Pick consensus
+  const pickedA = DATA.users.filter(u => u.picks[s.id] === teamA).map(u => u.name);
+  const pickedB = DATA.users.filter(u => u.picks[s.id] === teamB).map(u => u.name);
+  const seriesScore = (s.gamesA || 0) + "-" + (s.gamesB || 0);
+
+  // Locked series — show the result and the points each user earned
+  if (s.winner) {
+    const winners = DATA.users.filter(u => u.picks[s.id] === s.winner).map(u => u.name);
+    return `
+      <div class="impact-card locked">
+        ${head}
+        <div class="impact-matchup">
+          <div class="impact-team">
+            <img src="${teamLogo(teamA)}" onerror="this.style.visibility='hidden'" alt="">
+            <span>${escapeHTML(teamA)}</span>
+            ${seedA != null ? `<span class="seed">(${seedA})</span>` : ""}
+          </div>
+          <div class="impact-vs">VS</div>
+          <div class="impact-team right">
+            ${seedB != null ? `<span class="seed">(${seedB})</span>` : ""}
+            <span>${escapeHTML(teamB)}</span>
+            <img src="${teamLogo(teamB)}" onerror="this.style.visibility='hidden'" alt="">
+          </div>
+        </div>
+        <div class="impact-status">
+          <span>Series ${escapeHTML(seriesScore)}</span>
+          <span class="gold">${escapeHTML(s.winner)} WON</span>
+        </div>
+        <div class="impact-locked-note">
+          <span class="winner">${winners.length}</span> of ${DATA.users.length} picked correctly
+          (${ptsValue}p each):
+          ${winners.length ? winners.map(escapeHTML).join(", ") : "<em>none</em>"}
+        </div>
+      </div>`;
+  }
+
+  // Active or upcoming — show two-scenario projection
+  // For every user, compute projected max under each outcome.
+  const rows = DATA.users.map(u => {
+    const projA = projectedMaxIfWinner(s.id, teamA, u.name);
+    const projB = projectedMaxIfWinner(s.id, teamB, u.name);
+    const pick = u.picks[s.id] || "—";
+    return { name: u.name, pick, projA, projB };
+  });
+  // Sort by current pick weight (so users heavily favoring a side cluster, and
+  // largest-stakes users are at the top). Use abs delta as the proxy.
+  rows.sort((a, b) => Math.abs(b.projA - b.projB) - Math.abs(a.projA - a.projB));
+
+  const stateClass = s.status === "live" ? "live" : "";
+  const consensusPct = Math.round(100 * pickedA.length / DATA.users.length);
+  const consensusBlurb = pickedA.length === pickedB.length
+    ? `Split ${pickedA.length}–${pickedB.length}`
+    : (pickedA.length > pickedB.length
+        ? `<span class="gold">${consensusPct}%</span> picked ${escapeHTML(teamA)}`
+        : `<span class="gold">${100 - consensusPct}%</span> picked ${escapeHTML(teamB)}`);
+
+  return `
+    <div class="impact-card ${stateClass}">
+      ${head}
+      <div class="impact-matchup">
+        <div class="impact-team">
+          <img src="${teamLogo(teamA)}" onerror="this.style.visibility='hidden'" alt="">
+          <span>${escapeHTML(teamA)}</span>
+          ${seedA != null ? `<span class="seed">(${seedA})</span>` : ""}
+        </div>
+        <div class="impact-vs">VS</div>
+        <div class="impact-team right">
+          ${seedB != null ? `<span class="seed">(${seedB})</span>` : ""}
+          <span>${escapeHTML(teamB)}</span>
+          <img src="${teamLogo(teamB)}" onerror="this.style.visibility='hidden'" alt="">
+        </div>
+      </div>
+      <div class="impact-status">
+        <span>Series ${escapeHTML(seriesScore)}</span>
+        <span>${consensusBlurb}</span>
+      </div>
+      <table class="impact-table">
+        <thead>
+          <tr>
+            <th class="user">Player</th>
+            <th>Picked</th>
+            <th>If ${escapeHTML(teamA)}</th>
+            <th>If ${escapeHTML(teamB)}</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(r => {
+            const aWins = r.projA > r.projB;
+            const bWins = r.projB > r.projA;
+            const same  = r.projA === r.projB;
+            const pickA = r.pick === teamA;
+            const pickB = r.pick === teamB;
+            return `
+              <tr>
+                <td class="user" title="${escapeHTML(r.name)}">${escapeHTML(r.name)}</td>
+                <td class="pick ${pickA ? 'picked-a' : ''}${pickB ? 'picked-b' : ''}">${escapeHTML(r.pick)}</td>
+                <td class="proj ${aWins ? 'up' : (same ? 'same' : 'down')}">${r.projA}</td>
+                <td class="proj ${bWins ? 'up' : (same ? 'same' : 'down')}">${r.projB}</td>
+              </tr>`;
+          }).join("")}
+        </tbody>
+      </table>
+    </div>`;
 }
 
 function renderUserTabs() {
@@ -1554,125 +1742,13 @@ function selectFeedGame(eventId) {
   document.getElementById("feed-game-label").textContent = `${awayAbbr} @ ${homeAbbr}`;
   // Re-render selector to update active state
   renderFeedSelector(LIVE_GAMES_CACHE);
-  // Kick off both feeds in parallel
-  loadOddsBoard(eventId);
   loadPlayByPlayFeed(eventId);
 }
 window.selectFeedGame = selectFeedGame;
 
-/* ----- Live odds board (DraftKings via Netlify proxy) -----
-   We pull live in-play spread / money line / total from DraftKings' public
-   sportsbook JSON. ESPN's pickcenter only exposes opening lines; DraftKings'
-   feed includes live in-play numbers that move with the score.
-
-   This is the ONLY place on the dashboard that doesn't use ESPN as the source.
-   Bracket, scores grid, play-by-play, and series-winner sync still read ESPN. */
-
-function fmtAmerican(n) {
-  if (n == null || n === "") return "—";
-  const v = parseInt(n, 10);
-  if (isNaN(v)) return String(n);
-  return v > 0 ? `+${v}` : `${v}`;
-}
-function fmtSpread(n) {
-  if (n == null) return "—";
-  return n > 0 ? `+${n}` : `${n}`;
-}
-
-async function loadOddsBoard(eventId) {
-  const host = document.getElementById("odds-board");
-  // Only blank-out the panel on the *first* load for this event. On a periodic
-  // refresh we keep the existing odds visible until the new ones arrive (no flash).
-  const isFirstLoad = host.dataset.eventId !== eventId;
-  if (isFirstLoad) host.innerHTML = `<div class="feed-empty">Loading live odds from DraftKings…</div>`;
-  host.dataset.eventId = eventId;
-
-  // Look up team abbreviations from the cached ESPN scoreboard so we can
-  // ask DraftKings for the matching event. (We use ESPN here purely to know
-  // *which game* to ask DK about — the odds themselves come from DK.)
-  const ev = LIVE_GAMES_CACHE.find(e => e.id === eventId);
-  if (!ev) {
-    host.innerHTML = `<div class="feed-empty">Game not found in scoreboard.</div>`;
-    return;
-  }
-  const c = (ev.competitions && ev.competitions[0]) || {};
-  const comps = c.competitors || [];
-  const home = comps.find(x => x.homeAway === "home") || comps[0] || {};
-  const away = comps.find(x => x.homeAway === "away") || comps[1] || {};
-  const homeAbbr = normalizeESPNAbbr((home.team && home.team.abbreviation) || "");
-  const awayAbbr = normalizeESPNAbbr((away.team && away.team.abbreviation) || "");
-  const espnState = (ev.status && ev.status.type && ev.status.type.state) || "";
-  const isFinal = espnState === "post";
-
-  console.log("[odds] fetch DK", awayAbbr, "@", homeAbbr, new Date().toLocaleTimeString());
-
-  try {
-    const url = `/.netlify/functions/odds?home=${encodeURIComponent(homeAbbr)}&away=${encodeURIComponent(awayAbbr)}&_=${Date.now()}`;
-    const r = await fetch(url, { cache: "no-store" });
-    const text = await r.text();
-    let j;
-    try { j = JSON.parse(text); }
-    catch { throw new Error("proxy returned non-JSON: " + text.slice(0, 120)); }
-    window.__lastOdds = j;
-
-    if (!r.ok || !j.found) {
-      const samples = (j.sampleEvents || []).slice(0, 3).map(escapeHTML).join("<br>");
-      host.innerHTML = `
-        <div class="odds-empty-note">
-          <strong>${escapeHTML(j.error || ("DraftKings: HTTP " + r.status))}</strong>
-          ${samples ? `<br><br>Sample DK NBA events:<br><small>${samples}</small>` : ""}
-          ${isFinal ? "<br><br><em>Game is final — DK may have removed lines.</em>" : ""}
-        </div>`;
-      return;
-    }
-
-    const { spread, total, homeML, awayML, homeSpreadOdds, awaySpreadOdds, isLive, eventName } = j;
-    const homeSpread = spread;
-    const awaySpread = spread != null ? -spread : null;
-    const homeIsFav = spread != null && spread < 0;
-    const awayIsFav = spread != null && spread > 0;
-
-    host.innerHTML = `
-      <div class="odds-board">
-        <div class="odds-row head">
-          <div></div>
-          <div>Spread</div>
-          <div>Money</div>
-          <div>Total</div>
-        </div>
-        <div class="odds-row ${awayIsFav ? 'fav' : (homeIsFav ? 'dog' : '')}">
-          <div class="odds-team">
-            <img src="${teamLogo(awayAbbr)}" onerror="this.style.visibility='hidden'" alt="">
-            ${escapeHTML(awayAbbr)}
-          </div>
-          <div class="odds-cell ${awayIsFav ? 'gold' : ''}">${awaySpread != null ? fmtSpread(awaySpread) : '—'}<span class="dim">${awaySpreadOdds != null ? fmtAmerican(awaySpreadOdds) : ''}</span></div>
-          <div class="odds-cell ${awayIsFav ? 'gold' : ''}">${fmtAmerican(awayML)}</div>
-          <div class="odds-cell">${total != null ? `O ${total}` : '—'}</div>
-        </div>
-        <div class="odds-row ${homeIsFav ? 'fav' : (awayIsFav ? 'dog' : '')}">
-          <div class="odds-team">
-            <img src="${teamLogo(homeAbbr)}" onerror="this.style.visibility='hidden'" alt="">
-            ${escapeHTML(homeAbbr)}
-          </div>
-          <div class="odds-cell ${homeIsFav ? 'gold' : ''}">${homeSpread != null ? fmtSpread(homeSpread) : '—'}<span class="dim">${homeSpreadOdds != null ? fmtAmerican(homeSpreadOdds) : ''}</span></div>
-          <div class="odds-cell ${homeIsFav ? 'gold' : ''}">${fmtAmerican(homeML)}</div>
-          <div class="odds-cell">${total != null ? `U ${total}` : '—'}</div>
-        </div>
-        <div class="odds-providers">
-          <span class="odds-kind ${isLive ? 'live' : 'open'}">${isLive ? 'LIVE IN-PLAY' : 'PRE-GAME'}</span>
-          <span class="also">·</span>
-          Lines from <strong>DraftKings</strong>
-          <span class="also">·</span> <span class="odds-stamp">Updated ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>
-        </div>
-      </div>
-    `;
-
-    const tag = document.getElementById("odds-tag");
-    if (tag) tag.textContent = "DraftKings";
-  } catch (e) {
-    host.innerHTML = `<div class="feed-empty">Odds unavailable: ${escapeHTML(e.message)}</div>`;
-  }
-}
+/* ----- Live odds board removed (DraftKings/Bovada CORS-blocked, Netlify proxy
+   was burning function quota). Replaced with the Pool Impact panel below,
+   which is pure client-side and series-level. ----- */
 
 /* ----- ESPN play-by-play ----- */
 async function loadPlayByPlayFeed(eventId) {
@@ -2011,21 +2087,15 @@ loadLiveScores();
 setInterval(loadLiveScores, 60000); // refresh scores every minute
 syncPlayoffSeriesFromESPN();
 setInterval(syncPlayoffSeriesFromESPN, 5 * 60000); // re-sync every 5 min
-// Refresh live feed (odds + PBP) every 60s — odds move on pre-game too, so we
-// refresh whenever the game isn't already final.
+// Refresh play-by-play every 60s for live games only.
 function refreshActiveFeed() {
   if (!activeFeedGameId) return;
   const ev = LIVE_GAMES_CACHE.find(e => e.id === activeFeedGameId);
   const state = ev && ev.status && ev.status.type && ev.status.type.state;
-  // skip only finalized games; refresh both pre and in states (and unknown)
-  if (state === "post") return;
-  loadOddsBoard(activeFeedGameId);
-  // play-by-play only matters once the game is live
   if (state === "in") loadPlayByPlayFeed(activeFeedGameId);
 }
 setInterval(refreshActiveFeed, 60000);
-// Also refresh immediately whenever the tab regains focus (browsers throttle
-// background timers, so the panel can otherwise sit stale after switching tabs)
+// Refresh immediately whenever the tab regains focus.
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") refreshActiveFeed();
 });
